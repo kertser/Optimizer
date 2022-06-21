@@ -20,13 +20,9 @@ binding_refresh_interval: time between binding updates (default: 0.1 seconds, bi
 interactive: used internally when run in interactive Python shell (default: False)
 The environment variables HOST and PORT can also be used to configure NiceGUI.
 
-
-
 .classes('w-full'):
 
 """
-
-
 
 
 def update():
@@ -86,9 +82,9 @@ with ui.column():
             with ui.expansion('Specific reactors', icon='settings').classes('w-full'):
                 with ui.column():
                     # ui.checkbox('RZ-300', on_change=lambda e: checkbox_state.set_text(e.value))
-                    ui.checkbox('RZ-300')
-                    ui.checkbox('RZ-163')
-                    ui.checkbox('RZ-104')
+                    ui.checkbox('RZ-300',value=True)
+                    ui.checkbox('RZ-163',value=True)
+                    ui.checkbox('RZ-104',value=True)
 
 
         # chart.options.series[0].data[:] = random(2)
