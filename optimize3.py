@@ -6,7 +6,9 @@ Next step - maximum RED for minimum PQR
 from gekko import GEKKO
 import opt_config
 from opt_config import systems, LampPower
+from opt_config import namespace
 from statistics import mean
+import inspect
 
 m = GEKKO()
 
@@ -17,36 +19,18 @@ def RED(**kwargs):
     param 'module': name of the system
     '''
     try:
-
         modulename = __import__(kwargs['module'])
-
     except ImportError:
         print('No module found')
         sys.exit(1)
 
-    # That might be changed later
-    D1Log = 18 # [mJ/cm^2]
-
     # Get the arguments of the specific RED function
-    moduleargs = modulename.RED.__code__.co_varnames
+    moduleargs = inspect.getfullargspec(modulename.RED).args
 
-    # In general, all the RED functions in all the modules shall be reformatted to **kwargs settings
-    # However it will affect the back-compatibility with the calculator app
+    # TODO: UVT215
+    params = [kwargs[namespace[argument]] for argument in moduleargs]
 
-    """
-    R-200: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
-    EP-600: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
-    RS-104: RED(P,Eff,Flow,UVT,D1Log,NLamps)
-    RZ-104: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
-    RZ-163: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
-    RZ-163-UHP: RED(P,Status,Flow,UVT254,UVT215,D1Log,NLamps)
-    RZ-163-HP: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
-    RZ-300-HDR: RED(P,Status,Flow,UVT,D1Log,NLamps)
-    RZB-300: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
-    """
-
-    #return modulename.RED(P, Status, Q, UVT, D1Log, N_lamps)
-    return modulename.RED(kwargs['P'], kwargs['Status'], kwargs['Flow'], kwargs['UVT'], D1Log, kwargs['Nlamps'])
+    return modulename.RED(*params)
 
 targetRed = m.Param(value=40)
 
@@ -68,8 +52,7 @@ Q.value = mean([Q.upper,Q.lower])
 UVT.value = mean([UVT.upper,UVT.lower])
 
 #Equations
-#xRED = m.Var(value=RED(P.value,Q.value,UVT.value, 100, systems['RZ-300']))
-xRED = m.Var(value=RED(P=P.value,Flow=Q.value,UVT=UVT.value,Status = 100,module = systems['RZ-300'],Nlamps=1))
+xRED = m.Var(value=RED(module = systems['RZ-300'],P=P.value,Flow=Q.value,UVT=UVT.value,Status = 100,D1Log=18,NLamps=1))
 PQR = m.Var()
 
 m.Equation(xRED>=targetRed)
