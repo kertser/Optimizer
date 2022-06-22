@@ -11,6 +11,7 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+# Read the data from SystemParameters into the Pandas Dataframe
 SystemParameters_path = resource_path("SystemParameters.xlsx")
 SystemParameters = rX(SystemParameters_path, dtype='str',index_col=0) # System Parameters file
 
