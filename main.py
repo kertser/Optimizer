@@ -71,7 +71,7 @@ with ui.column():
                         ui.label('Minimum UVT: [%-1cm]')
                         ui.label().bind_text_from(minUVT, 'value')
                 with ui.column().classes('max-w-full -space-y-5'):
-                    maxUVT = ui.slider(min=0, max=100, value=0).props('label')
+                    maxUVT = ui.slider(min=0, max=100, value=40).props('label')
                     with ui.row() as row:
                         ui.label('Maximum UVT: [%-1cm]')
                         ui.label().bind_text_from(maxUVT, 'value')

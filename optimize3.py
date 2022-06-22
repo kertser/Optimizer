@@ -34,7 +34,15 @@ def RED(**kwargs):
     # However it will affect the back-compatibility with the calculator app
 
     """
-    R200
+    R-200: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
+    EP-600: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
+    RS-104: RED(P,Eff,Flow,UVT,D1Log,NLamps)
+    RZ-104: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
+    RZ-163: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
+    RZ-163-UHP: RED(P,Status,Flow,UVT254,UVT215,D1Log,NLamps)
+    RZ-163-HP: RED(P1,P2,P3,P4,Eff1,Eff2,Eff3,Eff4,Flow,UVT,D1Log,NLamps)
+    RZ-300-HDR: RED(P,Status,Flow,UVT,D1Log,NLamps)
+    RZB-300: RED(P1,P2,Eff1,Eff2,Flow,UVT,D1Log,NLamps)
     """
 
     #return modulename.RED(P, Status, Q, UVT, D1Log, N_lamps)
