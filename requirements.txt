@@ -1,0 +1,7 @@
+gekko
+nbformat
+nicegui
+openpyxl
+pandas
+pip-chill
+scipy
