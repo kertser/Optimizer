@@ -66,7 +66,7 @@ def resource_path(relative_path):
 
 # Read the data from SystemParameters into the Pandas Dataframe
 SystemParameters_path = resource_path("SystemParameters.xlsx")
-SystemParameters = rX(SystemParameters_path, dtype='str',index_col=0) # System Parameters file
+SystemParameters = rX(SystemParameters_path, dtype='str',index_col=3) # System Parameters file
 
 # systems contains the names of the modules, used for the calculation of RED
 systems = SystemParameters['CalcModule'].to_dict()
