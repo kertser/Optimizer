@@ -8,12 +8,12 @@ from opt_config import NLamps
 import inspect
 import sys
 
-System = 'RZ-104-11'
+System = 'RZ-163-11'
 targetRED = 40 # [mJ/cm^2]
 minUVT = 25
 maxUVT = 99
 minFlow = 10
-maxFlow = 140
+maxFlow = 300
 minP = 40
 maxP = 100
 
@@ -73,7 +73,7 @@ def c1(x):
 
 def c2(x):
     # RED <= targetRED+10
-    return targetRED +10 - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18)
+    return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18) - (targetRED+5)
 
 cons = ({'type':'ineq','fun':c1},
         {'type':'ineq','fun':c2})
@@ -90,8 +90,8 @@ UVT_guess = maxUVT#maxUVT#np.average(minUVT,maxUVT)
 x0 = np.array([P_guess,Q_guess,UVT_guess])
 """
 
-sol = shgo(objective, bounds, iters=3, constraints=cons)
-print(res)
+sol = shgo(objective, n=10, bounds=bounds, iters=5, constraints=cons)
+print(sol)
 
 
 #Retrive the optimized solution
