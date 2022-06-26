@@ -1,5 +1,5 @@
 # PQR optimizer
-from scipy.optimize import minimize, NonlinearConstraint
+from scipy.optimize import shgo
 import numpy as np
 import opt_config
 from opt_config import systems, LampPower
@@ -8,13 +8,13 @@ from opt_config import NLamps
 import inspect
 import sys
 
-System = 'RZ-163-13'
+System = 'RZ-104-11'
 targetRED = 40 # [mJ/cm^2]
-minUVT = 40
+minUVT = 25
 maxUVT = 99
-minFlow = 30
+minFlow = 10
 maxFlow = 140
-minP = 99
+minP = 40
 maxP = 100
 
 #def RED(P,Q,UVT,Status,module):
@@ -67,31 +67,31 @@ def objective(x): #PQR
     # Minimize PQR
     return PQR(x)
 
-def constraint(x):
+def c1(x):
     #RED >= targetRED
     return callRED(x,module=systems[System],NLamps=NLamps[System],D1Log=18)-targetRED
 
-cons = ({'type':'ineq','fun':constraint})
+def c2(x):
+    # RED <= targetRED+10
+    return targetRED +10 - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18)
 
-def confunc(x):
-    return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18)
-
-nlc = NonlinearConstraint(confunc, targetRED, targetRED+1)
+cons = ({'type':'ineq','fun':c1},
+        {'type':'ineq','fun':c2})
 
 # Put bounds on variable x[0],x[1],x[2] which is P,Q,UVT
 bounds = ((minP, maxP), (minFlow, maxFlow), (minUVT,maxUVT))
 
+"""
 # Initial Guesses:
 P_guess = maxP#maxP#np.average(minP,maxP)
 Q_guess = minFlow#np.average(minFlow,maxFlow)
 UVT_guess = maxUVT#maxUVT#np.average(minUVT,maxUVT)
 
 x0 = np.array([P_guess,Q_guess,UVT_guess])
+"""
 
-#sol = minimize(objective,x0, method='SLSQP',constraints=nlc,options={'disp':True,'maxiter':1000}, bounds=bounds)
-sol = minimize(objective,x0, method='COBYLA',constraints=cons,options={'disp':True,'maxiter':1000}, bounds=bounds)
-#sol = minimize(objective,x0, method='trust-constr',constraints=nlc,options={'disp':True,'maxiter':1000}, bounds=bounds)
-
+sol = shgo(objective, bounds, iters=3, constraints=cons)
+print(res)
 
 
 #Retrive the optimized solution

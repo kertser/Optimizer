@@ -70,6 +70,7 @@ SystemParameters = rX(SystemParameters_path, dtype='str',index_col=3) # System P
 
 # systems contains the names of the modules, used for the calculation of RED
 systems = SystemParameters['CalcModule'].to_dict()
+NLamps = SystemParameters['NLamps'].astype('int').to_dict()
 
 def LampPower(system):
     """
