@@ -67,13 +67,13 @@ with ui.row():
                 ui.label('Variables:').classes('text-h7 underline')
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox()
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         minPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.minP,on_change=lambda: power('min')).bind_value_to(pquvt,'minP').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Power:')
                             ui.label().bind_text_from(minPower, 'value')
                             ui.label('[%]')
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         maxPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.maxP,on_change=lambda: power('max')).bind_value_to(pquvt,'maxP').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Power:')
@@ -82,12 +82,12 @@ with ui.row():
 
                 with ui.row().classes('max-w-full space-x-2'): # Flow
                     Q_check = ui.checkbox()
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.minQ,on_change=lambda: flow('min')).bind_value_to(pquvt,'minQ').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Flow: [m^3/h]')
                             ui.label().bind_text_from(minFlow, 'value')
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.maxQ,on_change=lambda: flow('max')).bind_value_to(pquvt,'maxQ').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Flow: [m^3/h]')
@@ -95,28 +95,18 @@ with ui.row():
 
                 with ui.row().classes('max-w-full space-x-2'): # UVT
                     Q_check = ui.checkbox()
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         minUVT = ui.slider(min=0, max=100, value=0).props('label')
                         with ui.row() as row:
                             ui.label('Minimum UVT: [%-1cm]')
                             ui.label().bind_text_from(minUVT, 'value')
-                    with ui.column().classes('max-w-full -space-y-5'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52'):
                         maxUVT = ui.slider(min=0, max=100, value=40).props('label')
                         with ui.row() as row:
                             ui.label('Maximum UVT: [%-1cm]')
                             ui.label().bind_text_from(maxUVT, 'value')
-
-            # Constrains
-            """
-            with ui.card().classes('w-64'):
-                ui.label('Constrains:').classes('text-h7 underline')
-                with ui.expansion('Specific reactors', icon='settings').classes('w-full'):
-                    with ui.column():
-                        for system in opt_config.systems.keys():
-                            ui.checkbox(system, value=True)
-            """
             # chart.options.series[0].data[:] = random(2)
-            with ui.card():
+            with ui.card().classes('max-h-fit'):
                 ui.label('Charts:').classes('text-h7 underline')
                 chart = ui.chart({
                     'title': False,
