@@ -82,3 +82,12 @@ def LampPower(system):
     except ImportError:
         print('No module found')
         sys.exit(1)
+
+def Qmin_max(system):
+    return (SystemParameters['Qmin [m^3/h]'][system],SystemParameters['Qmax [m^3/h]'][system])
+
+def Pmin_max(system):
+    return (SystemParameters['Pmin [%]'][system], SystemParameters['Pmax [%]'][system])
+
+def UVTmin_max(system):
+    return (SystemParameters['UVTmin [%-1cm]'][system], SystemParameters['UVTmax [%-1cm]'][system])

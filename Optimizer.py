@@ -30,7 +30,32 @@ from nicegui import ui
 def update():
     table.options.rowData[0].age += 1
 
+class PQUVT:
+    def __init__(self):
+        self.minP = 40
+        self.maxP = 100
+        self.minQ = 10
+        self.maxQ = 1000
+
 #%% --- Main Frame ---
+
+pquvt = PQUVT()
+
+def power():
+    # Resolve the minimum-maximum for Power
+    if minPower.value > maxPower.value:
+        minPower.__setattr__('value', maxPower.value)
+    if maxPower.value < minPower.value:
+        maxPower.__setattr__('value', minPower.value)
+
+def flow():
+    # Resolve the minimum-maximum for Flow
+    if minFlow.value > maxFlow.value:
+        minFlow.__setattr__('value', maxFlow.value)
+    if maxFlow.value < minFlow.value:
+        maxFlow.__setattr__('value', minFlow.value)
+
+
 with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
@@ -39,13 +64,13 @@ with ui.row():
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox()
                     with ui.column().classes('max-w-full -space-y-5'):
-                        minPower = ui.slider(min=0, max=100, value=0).props('label')
+                        minPower = ui.slider(min=0, max=100, value=40,on_change=lambda: power()).bind_value_to(pquvt,'minP').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Power:')
                             ui.label().bind_text_from(minPower, 'value')
                             ui.label('[%]')
                     with ui.column().classes('max-w-full -space-y-5'):
-                        maxPower = ui.slider(min=0, max=100, value=0).props('label')
+                        maxPower = ui.slider(min=0, max=100, value=100,on_change=lambda: power()).bind_value_to(pquvt,'maxP').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Power:')
                             ui.label().bind_text_from(maxPower, 'value')
@@ -54,12 +79,12 @@ with ui.row():
                 with ui.row().classes('max-w-full space-x-2'): # Flow
                     Q_check = ui.checkbox()
                     with ui.column().classes('max-w-full -space-y-5'):
-                        minFlow = ui.slider(min=0, max=100, value=0).props('label')
+                        minFlow = ui.slider(min=10, max=1000, value=10,on_change=lambda: flow()).bind_value_to(pquvt,'minQ').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Flow: [m^3/h]')
                             ui.label().bind_text_from(minFlow, 'value')
                     with ui.column().classes('max-w-full -space-y-5'):
-                        maxFlow = ui.slider(min=0, max=100, value=0).props('label')
+                        maxFlow = ui.slider(min=10, max=1000, value=1000,on_change=lambda: flow()).bind_value_to(pquvt,'maxQ').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Flow: [m^3/h]')
                             ui.label().bind_text_from(maxFlow, 'value')
