@@ -35,25 +35,29 @@ class PQUVT:
         self.minP = 40
         self.maxP = 100
         self.minQ = 10
-        self.maxQ = 1000
+        self.maxQ = 2000
 
 #%% --- Main Frame ---
 
 pquvt = PQUVT()
 
-def power():
+def power(minmax):
     # Resolve the minimum-maximum for Power
-    if minPower.value > maxPower.value:
-        minPower.__setattr__('value', maxPower.value)
-    if maxPower.value < minPower.value:
-        maxPower.__setattr__('value', minPower.value)
+    if minmax == 'min':
+        if minPower.value > maxPower.value:
+            maxPower.__setattr__('value', minPower.value)
+    if minmax == 'max':
+        if maxPower.value < minPower.value:
+            minPower.__setattr__('value', maxPower.value)
 
-def flow():
+def flow(minmax):
     # Resolve the minimum-maximum for Flow
-    if minFlow.value > maxFlow.value:
-        minFlow.__setattr__('value', maxFlow.value)
-    if maxFlow.value < minFlow.value:
-        maxFlow.__setattr__('value', minFlow.value)
+    if minmax == 'min':
+        if minFlow.value > maxFlow.value:
+            maxFlow.__setattr__('value', minFlow.value)
+    if minmax == 'max':
+        if maxFlow.value < minFlow.value:
+            minFlow.__setattr__('value', maxFlow.value)
 
 
 with ui.row():
@@ -64,13 +68,13 @@ with ui.row():
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox()
                     with ui.column().classes('max-w-full -space-y-5'):
-                        minPower = ui.slider(min=0, max=100, value=40,on_change=lambda: power()).bind_value_to(pquvt,'minP').props('label')
+                        minPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.minP,on_change=lambda: power('min')).bind_value_to(pquvt,'minP').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Power:')
                             ui.label().bind_text_from(minPower, 'value')
                             ui.label('[%]')
                     with ui.column().classes('max-w-full -space-y-5'):
-                        maxPower = ui.slider(min=0, max=100, value=100,on_change=lambda: power()).bind_value_to(pquvt,'maxP').props('label')
+                        maxPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.maxP,on_change=lambda: power('max')).bind_value_to(pquvt,'maxP').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Power:')
                             ui.label().bind_text_from(maxPower, 'value')
@@ -79,12 +83,12 @@ with ui.row():
                 with ui.row().classes('max-w-full space-x-2'): # Flow
                     Q_check = ui.checkbox()
                     with ui.column().classes('max-w-full -space-y-5'):
-                        minFlow = ui.slider(min=10, max=1000, value=10,on_change=lambda: flow()).bind_value_to(pquvt,'minQ').props('label')
+                        minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.minQ,on_change=lambda: flow('min')).bind_value_to(pquvt,'minQ').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Flow: [m^3/h]')
                             ui.label().bind_text_from(minFlow, 'value')
                     with ui.column().classes('max-w-full -space-y-5'):
-                        maxFlow = ui.slider(min=10, max=1000, value=1000,on_change=lambda: flow()).bind_value_to(pquvt,'maxQ').props('label')
+                        maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.maxQ,on_change=lambda: flow('max')).bind_value_to(pquvt,'maxQ').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Flow: [m^3/h]')
                             ui.label().bind_text_from(maxFlow, 'value')
