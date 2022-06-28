@@ -27,8 +27,15 @@ import opt_config
 from nicegui import ui
 
 # This is a temporary procedure and will be replaced
-def update():
-    table.options.rowData[0].age += 1
+def optimize():
+    PQRs = {}  # empty dictionary of PQRs
+
+    for system in opt_config.systems.keys():
+        xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system)
+        PQRs[system] = round(PQROpt, 1)
+        print(system, '', round(PQROpt, 1))
+
+    #table.options.rowData[0].age += 1
 
 class PQUVT:
     def __init__(self):
@@ -136,16 +143,26 @@ with ui.row():
         with ui.card().classes('bg-yellow-300 w-full h-48'):
             table = ui.table({
                     'columnDefs': [
-                        {'headerName': 'Name', 'field': 'name'},
-                        {'headerName': 'Age', 'field': 'age'},
+                        {'headerName': 'System', 'field': 'system'},
+                        {'headerName': 'PQR [W/(m³/h)]', 'field': 'pqr'},
+                        {'headerName': 'Target RED [mJ/cm²]', 'field': 'targetRED'},
+                        {'headerName': 'Pmin [%]', 'field': 'pMin'},
+                        {'headerName': 'Pmax [%]', 'field': 'pMax'},
+                        {'headerName': 'Qmin [m³/h]', 'field': 'qMin'},
+                        {'headerName': 'Qmax [m³/h]', 'field': 'qMax'},
+                        {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
+                        {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
                     ],
                     'rowData': [
-                        {'name': 'Alice', 'age': 18},
-                        {'name': 'Bob', 'age': 21},
-                        {'name': 'Carol', 'age': 42},
+                        {'system': 'RZ-104-11', 'pqr': 18, 'targetRED':'40-45',
+                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
+                        {'system': 'RZ-104-12', 'pqr': 25, 'targetRED':'40-45',
+                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
+                        {'system': 'RZ-300-13', 'pqr': 124, 'targetRED':'40-45',
+                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99}
                     ],
                 })
-        ui.button('Optimize', on_click=update)
+        ui.button('Optimize', on_click=optimize)
     # Constrains
     with ui.card().classes('w-64'):
         ui.label('Constrains:').classes('text-h7 underline')

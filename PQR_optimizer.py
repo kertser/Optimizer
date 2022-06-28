@@ -20,24 +20,27 @@ minUVT = 25
 maxUVT = 98
 """
 
-def optimize(targetRED = 40, System = 'RZ-163-11', minP=40, maxP = 100, minFlow = 10, maxFlow =100, minUVT =40, maxUVT = 98):
+def optimize(targetRED = 40, System = 'RZ-163-11',
+             minP=40, maxP = 100,
+             minFlow = 5, maxFlow = 3500,
+             minUVT = 25, maxUVT = 98):
     # Optimization function will return minimum PQR at the set range of parameters
 
     # Check the boundary conditions:
-    if minP<opt_config.Pmin_max(System)[0]:
-        minP = opt_config.Pmin_max(System)[0]
-    if maxP>opt_config.Pmin_max(System)[1]:
-        minP = opt_config.Pmin_max(System)[1]
+    if minP<int(opt_config.Pmin_max(System)[0]):
+        minP = int(opt_config.Pmin_max(System)[0])
+    if maxP>int(opt_config.Pmin_max(System)[1]):
+        maxP = int(opt_config.Pmin_max(System)[1])
 
-    if minFlow<opt_config.Qmin_max(System)[0]:
-        minFlow = opt_config.Qmin_max(System)[0]
-    if maxFlow>opt_config.Qmin_max(System)[1]:
-        minFlow = opt_config.Qmin_max(System)[1]
+    if minFlow<int(opt_config.Qmin_max(System)[0]):
+        minFlow = int(opt_config.Qmin_max(System)[0])
+    if maxFlow>int(opt_config.Qmin_max(System)[1]):
+        maxFlow = int(opt_config.Qmin_max(System)[1])
 
-    if minUVT<opt_config.UVTmin_max(System)[0]:
-        minUVTm = opt_config.UVTmmin_max(System)[0]
-    if maxUVT>opt_config.UVTmmin_max(System)[1]:
-        minUVTm = opt_config.UVTmmin_max(System)[1]
+    if minUVT<int(opt_config.UVTmin_max(System)[0]):
+        minUVTm = int(opt_config.UVTmin_max(System)[0])
+    if maxUVT>int(opt_config.UVTmin_max(System)[1]):
+        maxUVTm = int(opt_config.UVTmin_max(System)[1])
 
     def objective(x):  # PQR
         # Minimize PQR
