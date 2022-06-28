@@ -115,14 +115,6 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
     PQROpt = sol.fun * LampPower(System) * NLamps[System] # PQR
     REDOpt = callRED(xOpt, module=systems[System], NLamps=NLamps[System], D1Log=18) # Optimum RED
 
-    """
-    print(f'P:{round(xOpt[0], 1)}[%]')
-    print(f'Q:{round(xOpt[1], 1)}[m³/h]')
-    print(f'UVT:{round(xOpt[2], 1)}[%-1cm]')
-    print(f'PQR:{round(PQROpt, 1)}[W/(m³/h)]')
-    print(f'RED:{round(REDOpt, 1)}[mJ/cm²]')
-    """
-
     return (xOpt,REDOpt,PQROpt)
 
 

@@ -30,29 +30,32 @@ import asyncio
 # This is a temporary procedure and will be replaced
 async def optimize():
     table.options.rowData = []
+    opbutton.visible = False # Hide the "Optimize" button
+    ui.colors(primary='#555') # Make all gray
+    ui.notify('Optimiation in progress...\nPlease wait for the calculation results to be finished', close_button='OK')
 
     for system in opt_config.systems.keys():
 
-        xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system)
+        try:
+            xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
+                                                          minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
+                                                          minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT)
 
-        table.options.rowData.append({
-            'system': system, 'pqr': round(PQROpt, 1), 'targetRED': '40-45',
-            'pMin': opt_config.Pmin_max(system)[0], 'pMax': opt_config.Pmin_max(system)[1],
-            'qMin': opt_config.Qmin_max(system)[0], 'qMax': opt_config.Qmin_max(system)[1],
-            'uvtMin': opt_config.UVTmin_max(system)[0], 'uvtMax': opt_config.UVTmin_max(system)[1]
-        })
-        """
-        table.options.rowData.append({'system': 'RZ-300-13', 'pqr': 124, 'targetRED':'40-45',
-                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99})
-        """
-        #print(system, '', round(PQROpt, 1))
-        await table.view.update()
-        await asyncio.sleep(1)
-    #table.options.rowData = sorted(table.options.rowData,key=table.options.rowData['pqr'])
-"""
-    PQRcalculations = [addRow(system) for system in opt_config.systems.keys()]
-    await asyncio.gather(*PQRcalculations)
-"""
+            table.options.rowData.append({
+                'system': system, 'pqr': round(PQROpt, 1), 'targetRED': '40-45',
+                'pMin': max(int(opt_config.Pmin_max(system)[0]),pquvt.minP), 'pMax': min(int(opt_config.Pmin_max(system)[1]),pquvt.maxP),
+                'qMin': max(int(opt_config.Qmin_max(system)[0]),pquvt.minQ), 'qMax': min(int(opt_config.Qmin_max(system)[1]),pquvt.maxQ),
+                'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT)
+            })
+            await table.view.update()
+            await asyncio.sleep(1)
+        except: # no solution for the selected range
+            await asyncio.sleep(0)
+    table.options.rowData = sorted(table.options.rowData, key=lambda d: d['pqr'])
+    ui.colors() # Reset colors
+    ui.run(show=True)
+
+    opbutton.visible = True # Restore button visibility
 
 class PQUVT:
     def __init__(self):
@@ -95,7 +98,7 @@ def uvt(minmax):
         if maxUVT.value < minUVT.value:
             minUVT.__setattr__('value', maxUVT.value)
 
-
+ui.colors()
 with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
@@ -182,7 +185,7 @@ with ui.row():
                          """
                     ],
                 })
-        ui.button('Optimize', on_click=optimize)
+        opbutton = ui.button('Optimize', on_click=optimize)
     # Constrains
     with ui.card().classes('w-64'):
         ui.label('Constrains:').classes('text-h7 underline')
