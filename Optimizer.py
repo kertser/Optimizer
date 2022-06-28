@@ -42,7 +42,7 @@ async def optimize():
                                                           minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT)
 
             table.options.rowData.append({
-                'system': system, 'pqr': round(PQROpt, 1), 'targetRED': '40-45',
+                'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
                 'pMin': max(int(opt_config.Pmin_max(system)[0]),pquvt.minP), 'pMax': min(int(opt_config.Pmin_max(system)[1]),pquvt.maxP),
                 'qMin': max(int(opt_config.Qmin_max(system)[0]),pquvt.minQ), 'qMax': min(int(opt_config.Qmin_max(system)[1]),pquvt.maxQ),
                 'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT)
@@ -53,8 +53,7 @@ async def optimize():
             await asyncio.sleep(0)
     table.options.rowData = sorted(table.options.rowData, key=lambda d: d['pqr'])
     ui.colors() # Reset colors
-    ui.run(show=True)
-
+    ui.notify('Finished the optimization...',close_button='OK',position='center')
     opbutton.visible = True # Restore button visibility
 
 class PQUVT:
@@ -66,6 +65,7 @@ class PQUVT:
         self.maxQ = 2000
         self.minUVT = 25
         self.maxUVT = 99
+        self.targetRED = 40
 
 #%% --- Main Frame ---
 
@@ -126,13 +126,13 @@ with ui.row():
                         with ui.row() as row:
                             ui.label('Minimum Flow:')
                             ui.label().bind_text_from(minFlow, 'value').classes('font-black')
-                            ui.label('[m^3/h]')
+                            ui.label('[m³/h]')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
                         maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.maxQ,on_change=lambda: flow('max')).bind_value_to(pquvt,'maxQ').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Flow:')
                             ui.label().bind_text_from(maxFlow, 'value').classes('font-black')
-                            ui.label('[m^3/h]')
+                            ui.label('[m³/h]')
 
                 with ui.row().classes('max-w-full space-x-2'): # UVT
                     UVT_check = ui.checkbox('UVT:',value=True).classes('max-w-full w-20')
@@ -148,6 +148,8 @@ with ui.row():
                             ui.label('Maximum UVT:')
                             ui.label().bind_text_from(maxUVT, 'value').classes('font-black')
                             ui.label('[%-1cm]')
+                targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
+                                            format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
             # chart.options.series[0].data[:] = random(2)
             with ui.card():
                 ui.label('Charts:').classes('text-h7 underline')
@@ -174,16 +176,7 @@ with ui.row():
                         {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
                         {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
                     ],
-                    'rowData': [
-                        """
-                        {'system': 'RZ-104-11', 'pqr': 18, 'targetRED':'40-45',
-                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
-                        {'system': 'RZ-104-12', 'pqr': 25, 'targetRED':'40-45',
-                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
-                        {'system': 'RZ-300-13', 'pqr': 124, 'targetRED':'40-45',
-                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99}
-                         """
-                    ],
+                    'rowData': [],
                 })
         opbutton = ui.button('Optimize', on_click=optimize)
     # Constrains
