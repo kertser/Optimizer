@@ -25,20 +25,38 @@ The environment variables HOST and PORT can also be used to configure NiceGUI.
 import PQR_optimizer
 import opt_config
 from nicegui import ui
+import asyncio
 
 # This is a temporary procedure and will be replaced
-def optimize():
-    PQRs = {}  # empty dictionary of PQRs
+async def optimize():
+    table.options.rowData = []
 
     for system in opt_config.systems.keys():
-        xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system)
-        PQRs[system] = round(PQROpt, 1)
-        print(system, '', round(PQROpt, 1))
 
-    #table.options.rowData[0].age += 1
+        xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system)
+
+        table.options.rowData.append({
+            'system': system, 'pqr': round(PQROpt, 1), 'targetRED': '40-45',
+            'pMin': opt_config.Pmin_max(system)[0], 'pMax': opt_config.Pmin_max(system)[1],
+            'qMin': opt_config.Qmin_max(system)[0], 'qMax': opt_config.Qmin_max(system)[1],
+            'uvtMin': opt_config.UVTmin_max(system)[0], 'uvtMax': opt_config.UVTmin_max(system)[1]
+        })
+        """
+        table.options.rowData.append({'system': 'RZ-300-13', 'pqr': 124, 'targetRED':'40-45',
+                         'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99})
+        """
+        #print(system, '', round(PQROpt, 1))
+        await table.view.update()
+        await asyncio.sleep(1)
+    #table.options.rowData = sorted(table.options.rowData,key=table.options.rowData['pqr'])
+"""
+    PQRcalculations = [addRow(system) for system in opt_config.systems.keys()]
+    await asyncio.gather(*PQRcalculations)
+"""
 
 class PQUVT:
     def __init__(self):
+        # Initial Values can be changed later
         self.minP = 40
         self.maxP = 100
         self.minQ = 10
@@ -140,10 +158,10 @@ with ui.row():
                     ],
                 }).classes('h-56')
 
-        with ui.card().classes('bg-yellow-300 w-full h-48'):
+        with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
-                    'columnDefs': [
-                        {'headerName': 'System', 'field': 'system'},
+                'columnDefs': [
+                        {'headerName': 'System Type', 'field': 'system'},
                         {'headerName': 'PQR [W/(m³/h)]', 'field': 'pqr'},
                         {'headerName': 'Target RED [mJ/cm²]', 'field': 'targetRED'},
                         {'headerName': 'Pmin [%]', 'field': 'pMin'},
@@ -154,12 +172,14 @@ with ui.row():
                         {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
                     ],
                     'rowData': [
+                        """
                         {'system': 'RZ-104-11', 'pqr': 18, 'targetRED':'40-45',
                          'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
                         {'system': 'RZ-104-12', 'pqr': 25, 'targetRED':'40-45',
                          'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99},
                         {'system': 'RZ-300-13', 'pqr': 124, 'targetRED':'40-45',
                          'pMin':40,'pMax':100,'qMin':10,'qMax':140,'uvtMin':25,'uvtMax':99}
+                         """
                     ],
                 })
         ui.button('Optimize', on_click=optimize)
