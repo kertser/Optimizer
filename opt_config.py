@@ -71,6 +71,8 @@ SystemParameters = rX(SystemParameters_path, dtype='str',index_col=3) # System P
 # systems contains the names of the modules, used for the calculation of RED
 systems = SystemParameters['CalcModule'].to_dict()
 NLamps = SystemParameters['NLamps'].astype('int').to_dict()
+reactor_families = sorted(list(set(['-'.join(reactor.split('-')[:2]) for reactor in systems.keys()])))
+valid_systems = list(systems.keys()) #Init the full list
 
 def LampPower(system):
     """

@@ -26,6 +26,7 @@ import PQR_optimizer
 import opt_config
 from nicegui import ui
 import asyncio
+import csv
 
 # This is a temporary procedure and will be replaced
 async def optimize():
@@ -34,19 +35,28 @@ async def optimize():
     ui.colors(primary='#555') # Make all gray
     ui.notify('Optimiation in progress...\nPlease wait for the calculation results to be finished', close_button='OK')
 
-    for system in opt_config.systems.keys():
+    #for system in opt_config.systems.keys():
+    for system in opt_config.valid_systems:
 
         try:
+            # Iterations (by means of complexity)
             iters = 5
-            REDOpt = 0
-            while not((pquvt.targetRED-5) <= REDOpt <= (pquvt.targetRED+5)) and (iters<8):
+            max_iters = 8
+            REDOpt = 0 #Initial value
+            redMargin = 5
+
+            while not ((pquvt.targetRED - redMargin) <= REDOpt <= (pquvt.targetRED + redMargin)) and (iters < max_iters):
+
                 xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
                                                               minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
                                                               minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
-                                                              iters = iters,targetRED=pquvt.targetRED)
-                print(iters) # Debug print
+                                                              iters = iters,targetRED=pquvt.targetRED,
+                                                              redMargin=redMargin)
+                # Debug print:
+                # print('Iterations = ', iters)
+                # print(f'for system {system} the calculated RED is {REDOpt}')
                 iters += 1
-                if iters==8:
+                if iters == max_iters:
                     raise Exception("not converging good enough")
 
             table.options.rowData.append({
@@ -64,6 +74,25 @@ async def optimize():
     ui.notify('Finished the optimization...',close_button='OK',position='center')
     opbutton.visible = True # Restore button visibility
 
+def export_to_CSV(): # Export the data to csv
+    # TODO: Rewrite to export in descent format: headers than data per line
+    tableData = table.options.to_dict()['rowData']
+    with open('best_reactors.csv', 'w') as f:
+        for tableLine in tableData:
+            for line in tableLine:
+                f.write("%s,%s\n" % (line, tableLine[line]))
+
+def reset(): # Reset everything
+    pass
+
+def add_remove_system(value):
+    # Filter-out the systems per family
+    opt_config.valid_systems = list(opt_config.systems.keys()) #Init the full list
+    for reactor_type in opt_config.reactor_families: #for all type in full families
+        if switch[reactor_type].value == False: # If the reactor type is "off"
+            for reactor in reactor_type:
+                opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
+
 class PQUVT:
     def __init__(self):
         # Initial Values can be changed later
@@ -74,6 +103,7 @@ class PQUVT:
         self.minUVT = 25
         self.maxUVT = 99
         self.targetRED = 40
+        self.redMargin = 5 # RED +/- margin of RED
 
 #%% --- Main Frame ---
 
@@ -156,8 +186,11 @@ with ui.row():
                             ui.label('Maximum UVT:')
                             ui.label().bind_text_from(maxUVT, 'value').classes('font-black')
                             ui.label('[%-1cm]')
-                targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
-                                            format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
+                with ui.row().classes('w-full justify-evenly'):
+                    targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
+                                                format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
+                    redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
+                                                format='%.1f',placeholder='Dose Margin?').bind_value_to(pquvt,'redMargin').classes('space-x-5 w-32')
             # chart.options.series[0].data[:] = random(2)
             with ui.card():
                 ui.label('Charts:').classes('text-h7 underline')
@@ -176,7 +209,7 @@ with ui.row():
                 'columnDefs': [
                         {'headerName': 'System Type', 'field': 'system'},
                         {'headerName': 'PQR [W/(m³/h)]', 'field': 'pqr'},
-                        {'headerName': 'Target RED [mJ/cm²]', 'field': 'targetRED'},
+                        {'headerName': 'Effective RED [mJ/cm²]', 'field': 'targetRED'},
                         {'headerName': 'Pmin [%]', 'field': 'pMin'},
                         {'headerName': 'Pmax [%]', 'field': 'pMax'},
                         {'headerName': 'Qmin [m³/h]', 'field': 'qMin'},
@@ -186,16 +219,19 @@ with ui.row():
                     ],
                     'rowData': [],
                 })
-        opbutton = ui.button('Optimize', on_click=optimize)
+        with ui.row().classes(''):
+            opbutton = ui.button('Optimize', on_click=optimize)
+            reset = ui.button('Reset All', on_click=reset)
+            export = ui.button('Export to csv', on_click=export_to_CSV)
     # Constrains
+    switch = {}
     with ui.card().classes('w-64'):
         ui.label('Constrains:').classes('text-h7 underline')
-        with ui.expansion('Specific reactors', icon='settings').classes('w-full'):
+        with ui.expansion('Specific reactor types', icon='settings').classes('w-full'):
             with ui.column():
-                for system in opt_config.systems.keys():
-                    ui.checkbox(system, value=True)
-
+                for reactor_type in opt_config.reactor_families:
+                    #ui.checkbox(system, value=True)
+                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
 
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
-

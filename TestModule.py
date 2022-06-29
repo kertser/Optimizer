@@ -13,7 +13,7 @@ for system in opt_config.systems.keys():
         while not ((tagetRED-redMargin) <= REDOpt <= (tagetRED + redMargin)) and (iters < max_iters):
 
             xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,
-                                                          targetRED=tagetRED,
+                                                          targetRED=tagetRED,redMargin=redMargin,
                                                           iters=iters)
             print('Iterations = ',iters)  # Debug print
             print(f'for system {system} the calculated RED is {REDOpt}')
