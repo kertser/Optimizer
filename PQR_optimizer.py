@@ -23,7 +23,8 @@ maxUVT = 98
 def optimize(targetRED = 40, System = 'RZ-163-11',
              minP=40, maxP = 100,
              minFlow = 5, maxFlow = 3500,
-             minUVT = 25, maxUVT = 98):
+             minUVT = 25, maxUVT = 98,
+             iters=5, redMargin=5):
     # Optimization function will return minimum PQR at the set range of parameters
 
     # Check the boundary conditions:
@@ -48,11 +49,11 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
 
     def c1(x):
         # RED >= targetRED
-        return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18) - targetRED
+        return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18) - (targetRED)
 
     def c2(x):
-        # RED <= targetRED+5
-        return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18) - (targetRED + 5)
+        # RED <= targetRED+10
+        return (targetRED + 10) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=18)
 
     # def RED(P,Q,UVT,Status,module):
     def RED(**kwargs):
@@ -107,14 +108,42 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
     bounds = ((minP, maxP), (minFlow, maxFlow), (minUVT, maxUVT))
 
     # Optimal Solution:
-    sol = shgo(objective, bounds=bounds, iters=5, constraints=cons)
+    sol = shgo(objective, bounds=bounds, iters=iters, n=128, constraints=cons)
     # print(sol['success'])
 
     # Retrive the optimized solution
+
+    for solution in sol.xl:
+        tempRED = callRED(solution, module=systems[System], NLamps=NLamps[System], D1Log=18)
+        if abs(tempRED - targetRED) < redMargin: # Default Margin is 5, but might be changed later on
+
+            break
+
+    xOpt = solution
+    PQROpt = solution[0]/solution[1] * LampPower(System) * NLamps[System]  # PQR
+    REDOpt = tempRED
+
+    return (xOpt, REDOpt, PQROpt)
+
+    """
+    # Depricated. Will be removed if all works correctly
+    # Retrive the optimized solution
+    
     xOpt = sol.x # P,Q,UVT optimum
+    # Debug print: !!!
+    print('----')
+    print(sol.xl)
+    for solution in sol.xl:
+        print('for single:',solution,
+              'RED = ',callRED(solution, module=systems[System], NLamps=NLamps[System], D1Log=18),
+              'and PQR = ',solution[0]/solution[1])
+        tempRED = callRED(solution, module=systems[System], NLamps=NLamps[System], D1Log=18)
+        if (tempRED - targetRED) < 5:
+            print('Hit!!!')
+            print(solution)
+    print('----')
     PQROpt = sol.fun * LampPower(System) * NLamps[System] # PQR
     REDOpt = callRED(xOpt, module=systems[System], NLamps=NLamps[System], D1Log=18) # Optimum RED
 
     return (xOpt,REDOpt,PQROpt)
-
-
+    """

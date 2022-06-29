@@ -37,9 +37,17 @@ async def optimize():
     for system in opt_config.systems.keys():
 
         try:
-            xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
-                                                          minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
-                                                          minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT)
+            iters = 5
+            REDOpt = 0
+            while not((pquvt.targetRED-5) <= REDOpt <= (pquvt.targetRED+5)) and (iters<8):
+                xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
+                                                              minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
+                                                              minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
+                                                              iters = iters,targetRED=pquvt.targetRED)
+                print(iters) # Debug print
+                iters += 1
+                if iters==8:
+                    raise Exception("not converging good enough")
 
             table.options.rowData.append({
                 'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
