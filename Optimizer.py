@@ -228,29 +228,25 @@ with ui.row():
                                                 format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
 
             with ui.card().classes(''):
-                #ui.label('Charts:').classes('text-h7 underline')
-                """
-                with ui.plot(figsize=(5, 4)):
-                    x = np.linspace(0.0, 5.0)
-                    y = np.cos(2 * np.pi * x) * np.exp(-x)
-                    plt.xlabel('Flow [m³/h]')
-                    plt.ylabel('RED [mJ/cm²]')
-                    plt.plot(x, y, '-')
-                    plt.legend('RED')
-                """
 
                 chart = ui.chart({
                     'title': {'text': 'Optimized PQR per UVT range'},
                     'subtitle': {'text': '5-top results'},
-                    'chart': {'type': 'column'},
+                    'chart': {'type': 'column','height':270,'zoomType': 'y'},
                     'xAxis': {'categories': ['RZ-163-11', 'RZ-104-12']},
                     'yAxis': {'title': {'text': 'P/Q [W/(m³/h)]'}},
+                    'legend': {'layout':'vertical','align':'right','verticalAlign':'top','floating': True},
+                    'exporting':{'enabled':False},
+                    'credits': {'enabled': False},
                     'series': [
                         {'name': 'Low UVT', 'data': [0.1, 0.2 ,1, 2.3, 3.5]},
                         {'name': 'High UVT', 'data': [0.3, 0.4, 3.2, 1.1, 0.1]},
-                    
+
                     ],
                 }).classes('h-64')
+                with ui.row():
+                    ui.button('push me!').props('size=sm')
+                    ui.button('push me too!!!').props('size=sm')
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
@@ -267,6 +263,7 @@ with ui.row():
                     ],
                     'rowData': [],
                 })
+
         with ui.card().classes('bg-yellow-300 w-full'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
@@ -289,5 +286,6 @@ with ui.row():
             ui.html('<br>')
             validatedOnly = ui.button('Validated Systems Only', on_click=validatedOnly)
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:82px')
+
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
