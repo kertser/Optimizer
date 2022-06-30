@@ -27,6 +27,8 @@ import opt_config
 from nicegui import ui
 import asyncio
 import csv
+import numpy as np
+from matplotlib import pyplot as plt
 
 # This is a temporary procedure and will be replaced
 async def optimize():
@@ -51,10 +53,7 @@ async def optimize():
                                                               minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
                                                               minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
                                                               iters = iters,targetRED=pquvt.targetRED,
-                                                              redMargin=redMargin)
-                # Debug print:
-                # print('Iterations = ', iters)
-                # print(f'for system {system} the calculated RED is {REDOpt}')
+                                                              redMargin=redMargin,D1Log=pquvt.D1Log)
                 iters += 1
                 if iters == max_iters:
                     raise Exception("not converging good enough")
@@ -90,6 +89,20 @@ def export_to_CSV(): # Export the data to csv
 def reset(): # Reset everything
     pass
 
+def clearAll():
+    for _ in opt_config.reactor_families:
+        switch[_].value = False
+
+def selectAll():
+    for _ in opt_config.reactor_families:
+        switch[_].value = True
+
+def validatedOnly():
+    for _ in opt_config.reactor_families:
+        switch[_].value = False
+    for _ in opt_config.validatedFamilies:
+        switch[_].value = True
+
 def add_remove_system(value):
     # Filter-out the systems per family
     opt_config.valid_systems = list(opt_config.systems.keys()) #Init the full list
@@ -109,6 +122,7 @@ class PQUVT:
         self.maxUVT = 99
         self.targetRED = 40
         self.redMargin = 5 # RED +/- margin of RED
+        self.D1Log = 18 # mJ/cm^2
 
 #%% --- Main Frame ---
 
@@ -196,16 +210,28 @@ with ui.row():
                                                 format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
                     redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
                                                 format='%.1f',placeholder='Dose Margin?').bind_value_to(pquvt,'redMargin').classes('space-x-5 w-32')
+                    D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
+                                                format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
 
-            with ui.card():
+
+            with ui.card().classes('-space-y-5'):
                 ui.label('Charts:').classes('text-h7 underline')
+                """
+                with ui.plot(figsize=(5, 4)):
+                    x = np.linspace(0.0, 5.0)
+                    y = np.cos(2 * np.pi * x) * np.exp(-x)
+                    plt.xlabel('Flow [m³/h]')
+                    plt.ylabel('RED [mJ/cm²]')
+                    plt.plot(x, y, '-')
+                    plt.legend('RED')
+                """
                 chart = ui.chart({
-                    'title': False,
-                    'chart': {'type': 'bar'},
-                    'xAxis': {'categories': ['A', 'B']},
+                    'title': True,
+                    'chart': {'type': 'column'},
+                    'xAxis': {'categories': ['RZ-163-11', 'RZ-104-12']},
                     'series': [
-                        {'name': 'Alpha', 'data': [0.1, 0.2]},
-                        {'name': 'Beta', 'data': [0.3, 0.4]},
+                        {'name': 'Low UVT', 'data': [0.1, 0.2]},
+                        {'name': 'High UVT', 'data': [0.3, 0.4]},
                     ],
                 }).classes('h-56')
 
@@ -224,10 +250,12 @@ with ui.row():
                     ],
                     'rowData': [],
                 })
-        with ui.row().classes(''):
-            opbutton = ui.button('Optimize', on_click=optimize)
-            reset = ui.button('Reset All', on_click=reset)
-            export = ui.button('Export to csv', on_click=export_to_CSV)
+        with ui.card().classes('bg-yellow-300 w-full'):
+            with ui.row().classes('w-full justify-between'):
+                with ui.row().classes('relative left-0'):
+                    opbutton = ui.button('Optimize', on_click=optimize)
+                    reset = ui.button('Reset All', on_click=reset)
+                export = ui.button('Export to csv', on_click=export_to_CSV)
     # Constrains
     switch = {}
     with ui.card().classes('w-62'):
@@ -239,10 +267,10 @@ with ui.row():
                 switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
             ui.html('<br>')
             with ui.row().classes('w-full justify-between'):
-                clearAll = ui.button('Clear')
-                enableAll = ui.button('Select All')
+                clearAll = ui.button('Clear', on_click=clearAll)
+                enableAll = ui.button('Select All', on_click=selectAll)
             ui.html('<br>')
-            validatedOnly = ui.button('Validated Systems Only')
+            validatedOnly = ui.button('Validated Systems Only', on_click=validatedOnly)
 
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)

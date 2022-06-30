@@ -73,6 +73,7 @@ systems = SystemParameters['CalcModule'].to_dict()
 NLamps = SystemParameters['NLamps'].astype('int').to_dict()
 reactor_families = sorted(list(set(['-'.join(reactor.split('-')[:2]) for reactor in systems.keys()])))
 valid_systems = list(systems.keys()) #Init the full list
+validatedFamilies = ['RZ-104','RZ-163','RZ-300']
 
 def LampPower(system):
     """
