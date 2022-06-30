@@ -196,7 +196,7 @@ with ui.row():
                                                 format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
                     redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
                                                 format='%.1f',placeholder='Dose Margin?').bind_value_to(pquvt,'redMargin').classes('space-x-5 w-32')
-            # chart.options.series[0].data[:] = random(2)
+
             with ui.card():
                 ui.label('Charts:').classes('text-h7 underline')
                 chart = ui.chart({
@@ -230,13 +230,19 @@ with ui.row():
             export = ui.button('Export to csv', on_click=export_to_CSV)
     # Constrains
     switch = {}
-    with ui.card().classes('w-64'):
+    with ui.card().classes('w-62'):
         ui.label('Constrains:').classes('text-h7 underline')
         #with ui.expansion('Specific reactor types', icon='settings').classes('w-full'):
-        with ui.column():
+        with ui.column().classes('-space-y-5'):
             for reactor_type in opt_config.reactor_families:
                 #ui.checkbox(system, value=True)
-                switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value)).classes('-space-y-5')
+                switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+            ui.html('<br>')
+            with ui.row().classes('w-full justify-between'):
+                clearAll = ui.button('Clear')
+                enableAll = ui.button('Select All')
+            ui.html('<br>')
+            validatedOnly = ui.button('Validated Systems Only')
 
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
