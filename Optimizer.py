@@ -77,10 +77,15 @@ async def optimize():
 def export_to_CSV(): # Export the data to csv
     # TODO: Rewrite to export in descent format: headers than data per line
     tableData = table.options.to_dict()['rowData']
+    columnDefs = [line['headerName'] for line in table.options.to_dict()['columnDefs']]
     with open('best_reactors.csv', 'w') as f:
+        [f.write("%s," % (_).replace("²", "^2").replace("³", "^3")) for _ in columnDefs]
+        f.write("\n")
         for tableLine in tableData:
-            for line in tableLine:
-                f.write("%s,%s\n" % (line, tableLine[line]))
+            for line in tableLine.values():
+                f.write("%s," % (line))
+            f.write("\n")
+        f.close()
 
 def reset(): # Reset everything
     pass
@@ -227,11 +232,11 @@ with ui.row():
     switch = {}
     with ui.card().classes('w-64'):
         ui.label('Constrains:').classes('text-h7 underline')
-        with ui.expansion('Specific reactor types', icon='settings').classes('w-full'):
-            with ui.column():
-                for reactor_type in opt_config.reactor_families:
-                    #ui.checkbox(system, value=True)
-                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+        #with ui.expansion('Specific reactor types', icon='settings').classes('w-full'):
+        with ui.column():
+            for reactor_type in opt_config.reactor_families:
+                #ui.checkbox(system, value=True)
+                switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value)).classes('-space-y-5')
 
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
