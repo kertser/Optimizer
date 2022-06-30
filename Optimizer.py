@@ -30,6 +30,21 @@ import csv
 import numpy as np
 from matplotlib import pyplot as plt
 
+class PQUVT:
+    def __init__(self):
+        # Initial Values can be changed later
+        self.minP = 40
+        self.maxP = 100
+        self.minQ = 10
+        self.maxQ = 2000
+        self.minUVT = 25
+        self.maxUVT = 99
+        self.targetRED = 40
+        self.redMargin = 5 # RED +/- margin of RED
+        self.D1Log = 18 # mJ/cm^2
+
+pquvt = PQUVT()
+
 # This is a temporary procedure and will be replaced
 async def optimize():
     table.options.rowData = []
@@ -45,15 +60,15 @@ async def optimize():
             iters = 5
             max_iters = 8
             REDOpt = 0 #Initial value
-            redMargin = 5
+            #redMargin = 5
 
-            while not ((pquvt.targetRED - redMargin) <= REDOpt <= (pquvt.targetRED + redMargin)) and (iters < max_iters):
+            while not ((pquvt.targetRED - pquvt.redMargin) <= REDOpt <= (pquvt.targetRED + pquvt.redMargin)) and (iters < max_iters):
 
                 xOpt, REDOpt, PQROpt = PQR_optimizer.optimize(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
                                                               minFlow=pquvt.minQ,maxFlow=pquvt.maxQ,
                                                               minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
                                                               iters = iters,targetRED=pquvt.targetRED,
-                                                              redMargin=redMargin,D1Log=pquvt.D1Log)
+                                                              redMargin=pquvt.redMargin,D1Log=pquvt.D1Log)
                 iters += 1
                 if iters == max_iters:
                     raise Exception("not converging good enough")
@@ -87,7 +102,15 @@ def export_to_CSV(): # Export the data to csv
         f.close()
 
 def reset(): # Reset everything
-    pass
+    pquvt = PQUVT()
+    selectAll()
+    table.options.rowData = []
+    minPower.__setattr__('value', pquvt.minP)
+    maxPower.__setattr__('value', pquvt.maxP)
+    minFlow.__setattr__('value', pquvt.minQ)
+    maxFlow.__setattr__('value', pquvt.maxQ)
+    minUVT.__setattr__('value', pquvt.minUVT)
+    maxUVT.__setattr__('value', pquvt.maxUVT)
 
 def clearAll():
     for _ in opt_config.reactor_families:
@@ -110,23 +133,6 @@ def add_remove_system(value):
         if switch[reactor_type].value == False: # If the reactor type is "off"
             for reactor in reactor_type:
                 opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
-
-class PQUVT:
-    def __init__(self):
-        # Initial Values can be changed later
-        self.minP = 40
-        self.maxP = 100
-        self.minQ = 10
-        self.maxQ = 2000
-        self.minUVT = 25
-        self.maxUVT = 99
-        self.targetRED = 40
-        self.redMargin = 5 # RED +/- margin of RED
-        self.D1Log = 18 # mJ/cm^2
-
-#%% --- Main Frame ---
-
-pquvt = PQUVT()
 
 def power(minmax):
     # Resolve the minimum-maximum for Power
@@ -154,6 +160,8 @@ def uvt(minmax):
     if minmax == 'max':
         if maxUVT.value < minUVT.value:
             minUVT.__setattr__('value', maxUVT.value)
+
+#%% --- Main Frame ---
 
 ui.colors()
 with ui.row():
@@ -256,11 +264,11 @@ with ui.row():
                     opbutton = ui.button('Optimize', on_click=optimize)
                     reset = ui.button('Reset All', on_click=reset)
                 export = ui.button('Export to csv', on_click=export_to_CSV)
-    # Constrains
+    # Switches
     switch = {}
     with ui.card().classes('w-62'):
-        ui.label('Constrains:').classes('text-h7 underline')
-        #with ui.expansion('Specific reactor types', icon='settings').classes('w-full'):
+        ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
+        ui.label('Specific Reactor Types:').classes('text-h7 underline')
         with ui.column().classes('-space-y-5'):
             for reactor_type in opt_config.reactor_families:
                 #ui.checkbox(system, value=True)
@@ -271,6 +279,6 @@ with ui.row():
                 enableAll = ui.button('Select All', on_click=selectAll)
             ui.html('<br>')
             validatedOnly = ui.button('Validated Systems Only', on_click=validatedOnly)
-
+        ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:82px')
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)

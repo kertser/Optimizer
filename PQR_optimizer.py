@@ -8,18 +8,6 @@ from opt_config import NLamps
 import inspect
 import sys
 
-"""
-System = 'RZ-300-11'
-targetRED = 40 # [mJ/cm^2]
-
-minP = 40
-maxP = 100
-minFlow = 150
-maxFlow = 1000
-minUVT = 25
-maxUVT = 98
-"""
-
 def optimize(targetRED = 40, System = 'RZ-163-11',
              minP=40, maxP = 100,
              minFlow = 5, maxFlow = 3500,
