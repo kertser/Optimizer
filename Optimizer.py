@@ -161,6 +161,12 @@ def uvt(minmax):
         if maxUVT.value < minUVT.value:
             minUVT.__setattr__('value', maxUVT.value)
 
+def loadChart():
+    pass
+    # As an example
+    #x = np.linspace()
+    # PQR_optimizer.RED(module=module, P=P, Flow=Q, UVT=UVT, UVT215=UVT215, Status=Status, D1Log=D1Log, NLamps=NLamps)
+
 #%% --- Main Frame ---
 
 ui.colors()
@@ -168,7 +174,7 @@ with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
             with ui.card().classes('max-w-full mr-2'):
-                ui.label('Variables:').classes('text-h7 underline')
+                ui.label('Control Variables:').classes('text-h7 underline')
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
@@ -221,9 +227,8 @@ with ui.row():
                     D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
                                                 format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
 
-
-            with ui.card().classes('-space-y-5'):
-                ui.label('Charts:').classes('text-h7 underline')
+            with ui.card().classes(''):
+                #ui.label('Charts:').classes('text-h7 underline')
                 """
                 with ui.plot(figsize=(5, 4)):
                     x = np.linspace(0.0, 5.0)
@@ -233,15 +238,19 @@ with ui.row():
                     plt.plot(x, y, '-')
                     plt.legend('RED')
                 """
+
                 chart = ui.chart({
-                    'title': True,
+                    'title': {'text': 'Optimized PQR per UVT range'},
+                    'subtitle': {'text': '5-top results'},
                     'chart': {'type': 'column'},
                     'xAxis': {'categories': ['RZ-163-11', 'RZ-104-12']},
+                    'yAxis': {'title': {'text': 'P/Q [W/(m³/h)]'}},
                     'series': [
-                        {'name': 'Low UVT', 'data': [0.1, 0.2]},
-                        {'name': 'High UVT', 'data': [0.3, 0.4]},
+                        {'name': 'Low UVT', 'data': [0.1, 0.2 ,1, 2.3, 3.5]},
+                        {'name': 'High UVT', 'data': [0.3, 0.4, 3.2, 1.1, 0.1]},
+                    
                     ],
-                }).classes('h-56')
+                }).classes('h-64')
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
