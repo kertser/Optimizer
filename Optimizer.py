@@ -134,6 +134,17 @@ def add_remove_system(value):
             for reactor in reactor_type:
                 opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
 
+def add_remove_subsystem(z):
+    print(z.sender.model)
+    # TODO: Fix the HP and UHP types
+    selected_subsystem = z.sender.model[0]+'-'+z.sender.model[1]
+    if selected_subsystem in opt_config.valid_systems:
+        opt_config.valid_systems.remove(selected_subsystem)
+        z.sender.props('color=gray text-color=green')
+    else:
+        opt_config.valid_systems.append(selected_subsystem)
+        z.sender.props('color=primary text-color=white')
+
 def power(minmax):
     # Resolve the minimum-maximum for Power
     if minmax == 'min':
@@ -331,16 +342,20 @@ with ui.row():
                 export = ui.button('Export to csv', on_click=export_to_CSV)
     # Switches
     switch = {}
+    subswitch = {}
     with ui.card().classes('w-62'):
         ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
         ui.label('Specific Reactor Types:').classes('text-h7 underline')
         with ui.column().classes('-space-y-5'):
             for reactor_type in opt_config.reactor_families:
                 with ui.row().classes('w-full justify-between'):
+                    # Main switch
                     switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+                    # Subsystem switches
                     with ui.row().classes('pt-3 -space-x-3'):
                         for sub_type in opt_config.reactor_subtypes(reactor_type):
-                            ui.button(sub_type).props('rounded dense size=xs')
+                            subswitch[reactor_type+'-'+sub_type] = ui.button(sub_type, on_click=lambda z: add_remove_subsystem(z)).props('push rounded dense size=xs')
+                            setattr(subswitch[reactor_type+'-'+sub_type], 'model', (reactor_type,sub_type))
 
             ui.html('<br>')
             with ui.row().classes('w-full justify-between'):
