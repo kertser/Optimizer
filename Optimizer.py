@@ -162,7 +162,20 @@ def uvt(minmax):
             minUVT.__setattr__('value', maxUVT.value)
 
 def loadChart():
-    pass
+
+    tableData = table.options.to_dict()['rowData']
+    for tableLine in tableData:
+        print(tableLine['system']) #as system name
+        print(tableLine['pqr']) #as PQR
+
+    UVTs = np.linspace(40,99)
+    REDs = [PQR_optimizer.RED(module='RZ_104_1L',P=100,Flow=100,UVT=uvt,UVT215=90,Status=100,D1Log=18,NLamps=1) for uvt in UVTs]
+
+
+    chart.options['chart']['type']='scatter'
+    chart.options['series'] = {'name':'RED = f(UVT)','data':[_ for _ in zip(UVTs,REDs)]}
+    return (UVTs,REDs)
+
     # As an example
     #x = np.linspace()
     # PQR_optimizer.RED(module=module, P=P, Flow=Q, UVT=UVT, UVT215=UVT215, Status=Status, D1Log=D1Log, NLamps=NLamps)
@@ -245,7 +258,7 @@ with ui.row():
                     ],
                 }).classes('h-64')
                 with ui.row():
-                    ui.button('push me!').props('size=sm')
+                    ui.button('push me!',on_click = loadChart).props('size=sm')
                     ui.button('push me too!!!').props('size=sm')
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):

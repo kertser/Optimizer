@@ -8,6 +8,18 @@ from opt_config import NLamps
 import inspect
 import sys
 
+# def RED(P,Q,UVT,Status,module):
+def RED(**kwargs):
+    try:
+        modulename = __import__(kwargs['module'])
+    except ImportError:
+        print('No module found')
+        sys.exit(1)
+
+    moduleargs = inspect.getfullargspec(modulename.RED).args
+    params = [kwargs[namespace[argument]] for argument in moduleargs]
+    return modulename.RED(*params)
+
 def optimize(targetRED = 40, System = 'RZ-163-11',
              minP=40, maxP = 100,
              minFlow = 5, maxFlow = 3500,
@@ -43,6 +55,7 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
         # RED <= targetRED+10
         return (targetRED + 10) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)
 
+    """
     # def RED(P,Q,UVT,Status,module):
     def RED(**kwargs):
         try:
@@ -54,6 +67,7 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
         moduleargs = inspect.getfullargspec(modulename.RED).args
         params = [kwargs[namespace[argument]] for argument in moduleargs]
         return modulename.RED(*params)
+    """
 
     def PQR(x):
         P = x[0]
