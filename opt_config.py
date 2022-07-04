@@ -72,8 +72,18 @@ SystemParameters = rX(SystemParameters_path, dtype='str',index_col=3) # System P
 systems = SystemParameters['CalcModule'].to_dict()
 NLamps = SystemParameters['NLamps'].astype('int').to_dict()
 reactor_families = sorted(list(set(['-'.join(reactor.split('-')[:2]) for reactor in systems.keys()])))
+
+
 valid_systems = list(systems.keys()) #Init the full list
 validatedFamilies = ['RZ-104','RZ-163','RZ-300']
+
+def reactor_subtypes(type):
+    # Returns the list of subtypes per list of types
+    list_of_subtypes = set([list(_.split('-'))[-1] for _ in systems.keys() if _.startswith(type)])
+    if 'RZ-163' in type:
+        list_of_subtypes.add('HP')
+        list_of_subtypes.add('UHP')
+    return sorted(list_of_subtypes)
 
 def LampPower(system):
     """

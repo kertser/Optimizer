@@ -8,6 +8,26 @@ from opt_config import NLamps
 import inspect
 import sys
 
+def specificPQR(system='RZ-300-11',P=100,Status=100,Tolerance=0.1,UVT254=95,minFlow=0.1,maxFlow=10000,targetRED=40):
+    """
+       Find PQR corresponding to a specific RED and UVT at 100% power
+       RED in mJ/cm^2
+       UVT in %-1cm
+       """
+    Flow1 = minFlow
+    Flow2 = maxFlow
+
+    while (abs(Flow2 - Flow1) > Tolerance):
+        Flow = Flow1 + ((Flow2 - Flow1) / 2)
+        # RED(P,Status,Flow,UVT,D1Log,NLamps)
+        cRED = RED(module=systems[system], P=P, Status=Status, Flow=Flow, UVT254=UVT254, UVT215=UVT254, D1Log=18, NLamps=NLamps[system])
+        if (cRED < targetRED):
+            Flow2 = Flow
+        else:
+            Flow1 = Flow
+
+    return (P/100 * LampPower(system) * NLamps[system] / Flow)
+
 # def RED(P,Q,UVT,Status,module):
 def RED(**kwargs):
     try:
@@ -54,20 +74,6 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
     def c2(x):
         # RED <= targetRED+10
         return (targetRED + 10) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)
-
-    """
-    # def RED(P,Q,UVT,Status,module):
-    def RED(**kwargs):
-        try:
-            modulename = __import__(kwargs['module'])
-        except ImportError:
-            print('No module found')
-            sys.exit(1)
-
-        moduleargs = inspect.getfullargspec(modulename.RED).args
-        params = [kwargs[namespace[argument]] for argument in moduleargs]
-        return modulename.RED(*params)
-    """
 
     def PQR(x):
         P = x[0]

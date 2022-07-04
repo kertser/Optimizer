@@ -162,23 +162,69 @@ def uvt(minmax):
             minUVT.__setattr__('value', maxUVT.value)
 
 def loadChart():
+    # Initialize the empty data
+    chart.options['series']['name' == 'High UVT']['data'] = []
+    chart.options['series']['name' == 'Low UVT']['data'] = []
+    chart.options['xAxis']['categories'] = []
 
     tableData = table.options.to_dict()['rowData']
+
     for tableLine in tableData:
-        print(tableLine['system']) #as system name
-        print(tableLine['pqr']) #as PQR
+        #print(tableLine['system']) #as system name
+        #print(tableLine['pqr']) #as PQR
+        #print(tableLine)
+        #print(tableLine['uvtMin'])
+        #print(tableLine['uvtMax'])
+        minUVT = tableLine['uvtMin']
+        maxUVT = tableLine['uvtMax']
+        system = tableLine['system']
 
+        if minUVT < int(opt_config.UVTmin_max(system)[0]):
+            minUVT = int(opt_config.UVTmin_max(system)[0])
+        if maxUVT > int(opt_config.UVTmin_max(system)[1]):
+            maxUVT = int(opt_config.UVTmin_max(system)[1])
+
+        chart.options['xAxis']['categories'].append(system)
+        #print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
+        chart.options['series']['name'=='High UVT']['data'].append(PQR_optimizer.specificPQR(system=system,
+                                                                                             P=100,
+                                                                                             Status=100,
+                                                                                             UVT254=maxUVT,
+                                                                                             targetRED=40))
+        chart.options['series']['name' == 'Low UVT']['data'].append(PQR_optimizer.specificPQR(system=system,
+                                                                                              P=100,
+                                                                                              Status=100,
+                                                                                              UVT254=minUVT,
+                                                                                              targetRED=40))
+
+    """
+    chart = ui.chart({
+                    'title': {'text': 'Optimized PQR per UVT range'},
+                    'subtitle': {'text': '5-top results'},
+                    'chart': {'type': 'column','height':270,'zoomType': 'y'},
+                    'xAxis': {'categories': ['RZ-163-11', 'RZ-104-12']},
+                    'yAxis': {'title': {'text': 'P/Q [W/(m³/h)]'}},
+                    'legend': {'layout':'vertical','align':'right','verticalAlign':'top','floating': True},
+                    'exporting':{'enabled':False},
+                    'credits': {'enabled': False},
+                    'series': [
+                        {'name': 'Low UVT', 'data': [0.1, 0.2 ,1, 2.3, 3.5]},
+                        {'name': 'High UVT', 'data': [0.3, 0.4, 3.2, 1.1, 0.1]},
+
+                    ],
+                }).classes('h-64')
+    """
+
+    """
+    system = 'RZ-104-11'
     UVTs = np.linspace(40,99)
-    REDs = [PQR_optimizer.RED(module='RZ_104_1L',P=100,Flow=100,UVT=uvt,UVT215=90,Status=100,D1Log=18,NLamps=1) for uvt in UVTs]
-
+    REDs = [PQR_optimizer.RED(module=opt_config.systems[system],P=100,Flow=100,
+                              UVT=uvt,UVT215=90,Status=100,D1Log=18,NLamps=opt_config.NLamps[system])
+            for uvt in UVTs]
 
     chart.options['chart']['type']='scatter'
-    chart.options['series'] = {'name':'RED = f(UVT)','data':[_ for _ in zip(UVTs,REDs)]}
-    return (UVTs,REDs)
-
-    # As an example
-    #x = np.linspace()
-    # PQR_optimizer.RED(module=module, P=P, Flow=Q, UVT=UVT, UVT215=UVT215, Status=Status, D1Log=D1Log, NLamps=NLamps)
+    chart.options['series'] = {'name':'RED vs. UVT for '+system,'data':[_ for _ in zip(UVTs,REDs)]}
+    """
 
 #%% --- Main Frame ---
 
@@ -290,8 +336,12 @@ with ui.row():
         ui.label('Specific Reactor Types:').classes('text-h7 underline')
         with ui.column().classes('-space-y-5'):
             for reactor_type in opt_config.reactor_families:
-                #ui.checkbox(system, value=True)
-                switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+                with ui.row().classes('w-full justify-between'):
+                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+                    with ui.row().classes('pt-3 -space-x-3'):
+                        for sub_type in opt_config.reactor_subtypes(reactor_type):
+                            ui.button(sub_type).props('rounded dense size=xs')
+
             ui.html('<br>')
             with ui.row().classes('w-full justify-between'):
                 clearAll = ui.button('Clear', on_click=clearAll)
