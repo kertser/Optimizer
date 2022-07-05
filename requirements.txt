@@ -4,3 +4,4 @@ nicegui
 openpyxl
 pandas
 numpy
+gunicorn

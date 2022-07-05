@@ -1,1 +1,1 @@
-web: run Optimizer.py
+web: gunicorn Optimizer.py:app --log-file=-
