@@ -1,1 +1,1 @@
-web: gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT Optimizer:app
+web: gunicorn -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:$PORT Optimizer:app
