@@ -224,7 +224,7 @@ def loadChart(state):
                                    'layout':'vertical','align':'right','verticalAlign':'top','floating': True}
         chart.options['subtitle'] = {'text': 'Calculated Values inside the selected range'}
 
-        chart.options['xAxis']={'categories':[tableLine['system'] for tableLine in tableData]}
+        chart.options['xAxis']={'title':{'text': 'UV-Systems'}, 'categories':[tableLine['system'] for tableLine in tableData]}
         chart.options['yAxis']={'title': {'text': 'P/Q [W/(m³/h)]'}}
         chart.options['series'] = {'name': 'Optimized PQR', 'data': PQRs}
 
