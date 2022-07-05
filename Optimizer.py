@@ -352,5 +352,5 @@ with ui.row():
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
 
 if __name__ == "__main__":
-    ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
-    #ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
+    #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
+    ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
