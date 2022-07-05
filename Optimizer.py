@@ -353,4 +353,4 @@ with ui.row():
 
 if __name__ == "__main__":
     #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
-    ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
+    ui.run(title='Optimizer', port=80, reload=True, favicon='configuration.ico', show=True)
