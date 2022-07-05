@@ -137,7 +137,6 @@ def add_remove_system(e):
                                     if system not in list(filter(lambda t: e.sender.type in t, opt_config.valid_systems))]
     else:
         opt_config.valid_systems.extend(list(filter(lambda t: e.sender.type in t, opt_config.systems.keys())))
-    print(opt_config.valid_systems)
 
     for _ in list(opt_config.systems.keys()):
         if _ in opt_config.valid_systems:
