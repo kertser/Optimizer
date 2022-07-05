@@ -1,7 +1,6 @@
-gekko
+scipy
 nbformat
 nicegui
 openpyxl
 pandas
-pip-chill
-scipy
+numpy

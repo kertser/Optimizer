@@ -26,9 +26,9 @@ import PQR_optimizer
 import opt_config
 from nicegui import ui
 import asyncio
-import csv
+#import csv
 import numpy as np
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 class PQUVT:
     def __init__(self):
@@ -207,7 +207,7 @@ def loadChart(state):
         for _ in opt_config.validatedFamilies:
             systems.append(list(filter(lambda t: _ in t, opt_config.systems.keys()))[0]) # Just the first types
 
-        UVTs = np.round(np.linspace(70, 99), 1)
+        UVTs = np.round(np.linspace(70, 98), 1)
         for system in systems:
             REDs = [PQR_optimizer.RED(module=opt_config.systems[system], P=100, Flow=100,
                                       UVT=uvt, UVT215=uvt, Status=100, D1Log=18, NLamps=opt_config.NLamps[system])
@@ -228,9 +228,7 @@ def loadChart(state):
         chart.options['yAxis']={'title': {'text': 'P/Q [W/(m³/h)]'}}
         chart.options['series'] = {'name': 'Optimized PQR', 'data': PQRs}
 
-
         #print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
-
 
 #%% --- Main Frame ---
 
