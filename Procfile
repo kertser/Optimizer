@@ -1,1 +1,1 @@
-web: gunicorn Optimizer.py:app --log-file=-
+web: gunicorn -w 3 -k uvicorn.workers.UvicornWorker Optimizer:app
