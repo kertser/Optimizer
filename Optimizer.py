@@ -130,20 +130,38 @@ def validatedOnly():
     for _ in opt_config.validatedFamilies:
         switch[_].value = True
 
-def add_remove_system(value):
+def add_remove_system(e):
     # Filter-out the systems per family
-    opt_config.valid_systems = list(opt_config.systems.keys()) #Init the full list
+    #opt_config.valid_systems = list(opt_config.systems.keys()) #Init the full list
+
+    if switch[e.sender.type].value == False:
+        #print(e.sender.type)
+        #print(list(filter(lambda t: e.sender.type in t, opt_config.valid_systems)))
+        #print(opt_config.valid_systems)
+        opt_config.valid_systems = [system for system in opt_config.valid_systems
+                                    if system not in list(filter(lambda t: e.sender.type in t, opt_config.valid_systems))]
+    else:
+        opt_config.valid_systems.append(list(filter(lambda t: e.sender.type in t, opt_config.valid_systems)))
+    print(opt_config.valid_systems)
+
+    """
     for reactor_type in opt_config.reactor_families: #for all type in full families
         if switch[reactor_type].value == False: # If the reactor type is "off"
             for reactor in reactor_type:
-                opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
+                #print(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))
+                if len(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))>0:
+                    opt_config.valid_systems.remove(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))
+                #opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
+
     for _ in list(opt_config.systems.keys()):
         if _ in opt_config.valid_systems:
             subswitch[_].props('color=primary text-color=white')
         else:
             subswitch[_].props('color=gray text-color=green')
-
+    #print(opt_config.valid_systems) #! Debug print
+    """
 def add_remove_subsystem(z):
+    # Add or Remove the subsystem
     selected_subsystem = z.sender.model[0]+'-'+z.sender.model[1]
     if selected_subsystem in opt_config.valid_systems: # Disable sybsystem
         opt_config.valid_systems.remove(selected_subsystem)
@@ -153,7 +171,6 @@ def add_remove_subsystem(z):
     else: # Enable sybsystem
         if switch[z.sender.model[0]].value == False: # If the family is off
             switch[z.sender.model[0]].value = True
-            #add_remove_system(switch[z.sender.model[0]].value)
             for _ in list(filter(lambda t: z.sender.model[0] in t, opt_config.systems.keys())):
                 opt_config.valid_systems.remove(_)
                 subswitch[_].props('color=gray text-color=green')
@@ -213,7 +230,6 @@ def loadChart(state):
                     for uvt in UVTs]
 
             chart.options['series'].append({'name': system, 'data': [_ for _ in zip(UVTs, REDs)]})
-            #chart.options['series'] = {'name': 'RED vs. UVT for ' + system, 'data': [_ for _ in zip(UVTs, REDs)]}
     elif state=='PQRs':
         tableData = table.options.to_dict()['rowData']
         PQRs = [tableLine['pqr'] for tableLine in tableData]
@@ -230,11 +246,6 @@ def loadChart(state):
 
 
         #print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
-
-        """
-        'exporting':{'enabled':False},
-        'credits': {'enabled': False},
-        """
 
 
 #%% --- Main Frame ---
@@ -342,13 +353,14 @@ with ui.row():
             for reactor_type in opt_config.reactor_families:
                 with ui.row().classes('w-full justify-between'):
                     # Main switch
-                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e.value))
+                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e))
+                    setattr(switch[reactor_type], 'type', reactor_type)
                     # Subsystem switches
                     with ui.row().classes('pt-3 -space-x-3'):
                         for sub_type in opt_config.reactor_subtypes(reactor_type):
                             subswitch[reactor_type+'-'+sub_type] = ui.button(
                                 sub_type, on_click=lambda z: add_remove_subsystem(z)
-                            ).props('push rounded dense size=xs')#.bind_visibility_from(switch[reactor_type],'value')
+                            ).props('push rounded dense size=xs')
                             setattr(subswitch[reactor_type+'-'+sub_type], 'model', (reactor_type,sub_type))
 
             ui.html('<br>')
