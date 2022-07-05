@@ -132,34 +132,19 @@ def validatedOnly():
 
 def add_remove_system(e):
     # Filter-out the systems per family
-    #opt_config.valid_systems = list(opt_config.systems.keys()) #Init the full list
-
     if switch[e.sender.type].value == False:
-        #print(e.sender.type)
-        #print(list(filter(lambda t: e.sender.type in t, opt_config.valid_systems)))
-        #print(opt_config.valid_systems)
         opt_config.valid_systems = [system for system in opt_config.valid_systems
                                     if system not in list(filter(lambda t: e.sender.type in t, opt_config.valid_systems))]
     else:
-        opt_config.valid_systems.append(list(filter(lambda t: e.sender.type in t, opt_config.valid_systems)))
+        opt_config.valid_systems.extend(list(filter(lambda t: e.sender.type in t, opt_config.systems.keys())))
     print(opt_config.valid_systems)
-
-    """
-    for reactor_type in opt_config.reactor_families: #for all type in full families
-        if switch[reactor_type].value == False: # If the reactor type is "off"
-            for reactor in reactor_type:
-                #print(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))
-                if len(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))>0:
-                    opt_config.valid_systems.remove(list(filter(lambda t: reactor_type in t, opt_config.valid_systems)))
-                #opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
 
     for _ in list(opt_config.systems.keys()):
         if _ in opt_config.valid_systems:
             subswitch[_].props('color=primary text-color=white')
         else:
             subswitch[_].props('color=gray text-color=green')
-    #print(opt_config.valid_systems) #! Debug print
-    """
+
 def add_remove_subsystem(z):
     # Add or Remove the subsystem
     selected_subsystem = z.sender.model[0]+'-'+z.sender.model[1]
