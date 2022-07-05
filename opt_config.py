@@ -80,9 +80,6 @@ validatedFamilies = ['RZ-104','RZ-163','RZ-300']
 def reactor_subtypes(type):
     # Returns the list of subtypes per list of types
     list_of_subtypes = set([list(_.split('-'))[-1] for _ in systems.keys() if _.startswith(type)])
-    if 'RZ-163' in type:
-        list_of_subtypes.add('HP')
-        list_of_subtypes.add('UHP')
     return sorted(list_of_subtypes)
 
 def LampPower(system):

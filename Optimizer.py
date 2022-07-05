@@ -89,7 +89,6 @@ async def optimize():
     opbutton.visible = True # Restore button visibility
 
 def export_to_CSV(): # Export the data to csv
-    # TODO: Rewrite to export in descent format: headers than data per line
     tableData = table.options.to_dict()['rowData']
     columnDefs = [line['headerName'] for line in table.options.to_dict()['columnDefs']]
     with open('best_reactors.csv', 'w') as f:
@@ -115,10 +114,14 @@ def reset(): # Reset everything
 def clearAll():
     for _ in opt_config.reactor_families:
         switch[_].value = False
+    for _ in list(opt_config.systems.keys()):
+        subswitch[_].props('color=gray text-color=green')
 
 def selectAll():
     for _ in opt_config.reactor_families:
         switch[_].value = True
+    for _ in list(opt_config.systems.keys()):
+        subswitch[_].props('color=primary text-color=white')
 
 def validatedOnly():
     for _ in opt_config.reactor_families:
@@ -133,17 +136,33 @@ def add_remove_system(value):
         if switch[reactor_type].value == False: # If the reactor type is "off"
             for reactor in reactor_type:
                 opt_config.valid_systems = list(filter(lambda t: reactor_type not in t, opt_config.valid_systems))
+    for _ in list(opt_config.systems.keys()):
+        if _ in opt_config.valid_systems:
+            subswitch[_].props('color=primary text-color=white')
+        else:
+            subswitch[_].props('color=gray text-color=green')
 
 def add_remove_subsystem(z):
-    print(z.sender.model)
-    # TODO: Fix the HP and UHP types
     selected_subsystem = z.sender.model[0]+'-'+z.sender.model[1]
-    if selected_subsystem in opt_config.valid_systems:
+    if selected_subsystem in opt_config.valid_systems: # Disable sybsystem
         opt_config.valid_systems.remove(selected_subsystem)
         z.sender.props('color=gray text-color=green')
-    else:
-        opt_config.valid_systems.append(selected_subsystem)
-        z.sender.props('color=primary text-color=white')
+        if not list(filter(lambda t: z.sender.model[0] in t, opt_config.valid_systems)):  # If list is empty
+            switch[z.sender.model[0]].value = False  # Switch-off the entire family
+    else: # Enable sybsystem
+        if switch[z.sender.model[0]].value == False: # If the family is off
+            switch[z.sender.model[0]].value = True
+            #add_remove_system(switch[z.sender.model[0]].value)
+            for _ in list(filter(lambda t: z.sender.model[0] in t, opt_config.systems.keys())):
+                opt_config.valid_systems.remove(_)
+                subswitch[_].props('color=gray text-color=green')
+            opt_config.valid_systems.append(selected_subsystem)
+            subswitch[selected_subsystem].props('color=primary text-color=white')
+        else:
+            opt_config.valid_systems.append(selected_subsystem)
+            z.sender.props('color=primary text-color=white')
+
+
 
 def power(minmax):
     # Resolve the minimum-maximum for Power
@@ -343,10 +362,12 @@ with ui.row():
     # Switches
     switch = {}
     subswitch = {}
-    with ui.card().classes('w-62'):
+    with ui.card().classes('w-62 -space-y-2'):
         ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
-        ui.label('Specific Reactor Types:').classes('text-h7 underline')
-        with ui.column().classes('-space-y-5'):
+        ui.label('Specific Reactor Types:').classes('text-h8 underline')
+        validatedOnly = ui.button('Select Validated Systems Only', on_click=validatedOnly).props(
+            'rounded align=around icon=directions size=sm')
+        with ui.column().classes('-space-y-6'):
             for reactor_type in opt_config.reactor_families:
                 with ui.row().classes('w-full justify-between'):
                     # Main switch
@@ -354,16 +375,16 @@ with ui.row():
                     # Subsystem switches
                     with ui.row().classes('pt-3 -space-x-3'):
                         for sub_type in opt_config.reactor_subtypes(reactor_type):
-                            subswitch[reactor_type+'-'+sub_type] = ui.button(sub_type, on_click=lambda z: add_remove_subsystem(z)).props('push rounded dense size=xs')
+                            subswitch[reactor_type+'-'+sub_type] = ui.button(
+                                sub_type, on_click=lambda z: add_remove_subsystem(z)
+                            ).props('push rounded dense size=xs')#.bind_visibility_from(switch[reactor_type],'value')
                             setattr(subswitch[reactor_type+'-'+sub_type], 'model', (reactor_type,sub_type))
 
             ui.html('<br>')
             with ui.row().classes('w-full justify-between'):
-                clearAll = ui.button('Clear', on_click=clearAll)
-                enableAll = ui.button('Select All', on_click=selectAll)
-            ui.html('<br>')
-            validatedOnly = ui.button('Validated Systems Only', on_click=validatedOnly)
-        ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:82px')
+                clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
+                enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
+        ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
 
 if __name__ == "__main__":
     ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
