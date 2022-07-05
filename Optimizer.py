@@ -320,7 +320,7 @@ with ui.row():
         with ui.card().classes('bg-yellow-300 w-full'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
-                    opbutton = ui.button('Optimize', on_click=optimize)
+                    opbutton = ui.button('Optimize by PQR', on_click=optimize)
                     reset = ui.button('Reset All', on_click=reset)
                 export = ui.button('Export to csv', on_click=export_to_CSV)
     # Switches
