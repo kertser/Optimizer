@@ -20,7 +20,7 @@ def specificPQR(system='RZ-300-11',P=100,Status=100,Tolerance=0.1,UVT254=95,minF
     while (abs(Flow2 - Flow1) > Tolerance):
         Flow = Flow1 + ((Flow2 - Flow1) / 2)
         # RED(P,Status,Flow,UVT,D1Log,NLamps)
-        cRED = RED(module=systems[system], P=P, Status=Status, Flow=Flow, UVT254=UVT254, UVT215=UVT254, D1Log=18, NLamps=NLamps[system])
+        cRED = RED(module=systems[system], P=P, Status=Status, Flow=Flow, UVT=UVT254, UVT254=UVT254, UVT215=UVT254, D1Log=18, NLamps=NLamps[system])
         if (cRED < targetRED):
             Flow2 = Flow
         else:
