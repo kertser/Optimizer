@@ -6,3 +6,5 @@ pandas
 numpy
 gunicorn
 uvicorn
+python-multipart
+Jinja2
