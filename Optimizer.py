@@ -89,6 +89,7 @@ async def optimize():
     opbutton.visible = True # Restore button visibility
 
     loadChartPQR()
+    RED_UVT_chart.visible = True
 
 def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
@@ -238,6 +239,7 @@ def loadChartPQR():
 #%% --- Main Frame ---
 
 ui.colors()
+
 with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
@@ -297,14 +299,15 @@ with ui.row():
 
             with ui.card():
                 chart = ui.chart({
-                    'title': {'text': 'Select The chart'},
+                    'title': {'text': 'Run PQR Optimization to make the chart available'},
                     'chart': {'height': 270, 'zoomType': 'y'},
                     'exporting':{'enabled':False},
                     'credits': {'enabled': False}
                 }).classes('h-64')
                 with ui.row():
-                    ui.button('PQR chart', on_click = loadChartPQR).props('size=sm')
-                    #ui.button('RED vs UVT chart', on_click = loadChartRED).props('size=sm')
+                    PQR_chart = ui.button('PQR chart', on_click = loadChartPQR).props('size=sm')
+                    RED_UVT_chart = ui.button('RED vs UVT chart', on_click = loadChartRED).props('size=sm')
+                    RED_UVT_chart.visible = False
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
