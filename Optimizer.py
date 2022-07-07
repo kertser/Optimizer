@@ -87,7 +87,8 @@ async def optimize():
     ui.colors() # Reset colors
     ui.notify('Finished the optimization...',close_button='OK',position='center')
     opbutton.visible = True # Restore button visibility
-    loadChart('PQRs')
+
+    loadChartPQR()
 
 def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
@@ -191,44 +192,48 @@ def uvt(minmax):
         if maxUVT.value < minUVT.value:
             minUVT.__setattr__('value', maxUVT.value)
 
-def loadChart(state):
-    if state=='REDvsUVT':
-        chart.options['chart']['type'] = 'scatter'
-        chart.options['legend'] = {'borderWidth': 1,'backgroundColor': 'white', 'x': 70, 'y': 60, 'shadow':True,
-                                   'layout': 'vertical','align': 'left', 'verticalAlign': 'top', 'floating': True}
-        chart.options['xAxis'] = {'title': {'text': 'UVT [%-1cm]'}}
-        chart.options['yAxis'] = {'title': {'text': 'RED [mJ/cm²]'}}
-        chart.options['title'] = {'text': 'RED vs. UVT'}
-        chart.options['subtitle'] = {'text': 'Validated Systems at Q=100[m³/h]'}
-        chart.options['series'] = [] # Initialize Empty
+def loadChartRED():
+    chart.options['chart']['type'] = 'scatter'
+    chart.options['legend'] = {'borderWidth': 1, 'backgroundColor': 'white', 'x': 70, 'y': 60, 'shadow': True,
+                               'layout': 'vertical', 'align': 'left', 'verticalAlign': 'top', 'floating': True}
+    chart.options['xAxis'] = {'title': {'text': 'UVT [%-1cm]'}}
+    chart.options['yAxis'] = {'title': {'text': 'RED [mJ/cm²]'}}
+    chart.options['title'] = {'text': 'RED vs. UVT'}
+    chart.options['subtitle'] = {'text': 'Validated Systems at Q=100[m³/h]'}
+    chart.options['series'] = []  # Initialize Empty
 
-        # Add all the systems into the list
-        systems = []
-        for _ in opt_config.validatedFamilies:
-            systems.append(list(filter(lambda t: _ in t, opt_config.systems.keys()))[0]) # Just the first types
+    # Add all the systems into the list
+    systems = []
+    for _ in opt_config.validatedFamilies:
+        systems.append(list(filter(lambda t: _ in t, opt_config.systems.keys()))[0])  # Just the first types
 
-        UVTs = np.round(np.linspace(70, 98), 1)
-        for system in systems:
-            REDs = [PQR_optimizer.RED(module=opt_config.systems[system], P=100, Flow=100,
-                                      UVT=uvt, UVT215=uvt, Status=100, D1Log=18, NLamps=opt_config.NLamps[system])
-                    for uvt in UVTs]
+    UVTs = np.round(np.linspace(70, 98), 1)
+    for system in systems:
+        REDs = [PQR_optimizer.RED(module=opt_config.systems[system], P=100, Flow=100,
+                                  UVT=uvt, UVT215=uvt, Status=100, D1Log=18, NLamps=opt_config.NLamps[system])
+                for uvt in UVTs]
 
-            chart.options['series'].append({'name': system, 'data': [_ for _ in zip(UVTs, REDs)]})
-    elif state=='PQRs':
-        tableData = table.options.to_dict()['rowData']
-        PQRs = [tableLine['pqr'] for tableLine in tableData]
+        chart.options['series'].append({'name': system, 'data': [list(_) for _ in zip(UVTs, REDs)]})
 
-        chart.options['chart'] = {'type': 'column', 'height': 270, 'zoomType': 'y'}
-        chart.options['title'] = {'text': 'Optimized PQR'}
-        chart.options['legend'] = {'borderWidth': 1,'backgroundColor': 'white', 'x': 0, 'y': 0, 'shadow':True,
-                                   'layout':'vertical','align':'right','verticalAlign':'top','floating': True}
-        chart.options['subtitle'] = {'text': 'Calculated Values inside the selected range'}
+def loadChartPQR():
+    chart.options['series'] = []  # Initialize Empty
 
-        chart.options['xAxis']={'title':{'text': 'UV-Systems'}, 'categories':[tableLine['system'] for tableLine in tableData]}
-        chart.options['yAxis']={'title': {'text': 'P/Q [W/(m³/h)]'}}
-        chart.options['series'] = {'name': 'Optimized PQR', 'data': PQRs}
+    tableData = table.options.to_dict()['rowData']
+    PQRs = [tableLine['pqr'] for tableLine in tableData]
 
-        #print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
+    chart.options['series'].append({'name': 'Optimized PQR', 'data': PQRs})
+
+    chart.options['chart'] = {'type': 'column', 'height': 270, 'zoomType': 'y'}
+    chart.options['title'] = {'text': 'Optimized PQR'}
+    chart.options['legend'] = {'borderWidth': 1, 'backgroundColor': 'white', 'x': 0, 'y': 0, 'shadow': True,
+                               'layout': 'vertical', 'align': 'right', 'verticalAlign': 'top', 'floating': True}
+    chart.options['subtitle'] = {'text': 'Calculated Values inside the selected range'}
+    chart.options['xAxis'] = {'title': {'text': 'UV-Systems'},
+                              'categories': [tableLine['system'] for tableLine in tableData]}
+    chart.options['yAxis'] = {'title': {'text': 'P/Q [W/(m³/h)]'}}
+
+    # print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
+
 
 #%% --- Main Frame ---
 
@@ -290,16 +295,16 @@ with ui.row():
                     D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
                                                 format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
 
-            with ui.card().classes(''):
+            with ui.card():
                 chart = ui.chart({
                     'title': {'text': 'Select The chart'},
-                    'chart': {'type': 'scater', 'height': 270, 'zoomType': 'y'},
+                    'chart': {'height': 270, 'zoomType': 'y'},
                     'exporting':{'enabled':False},
                     'credits': {'enabled': False}
                 }).classes('h-64')
                 with ui.row():
-                    ui.button('PQR chart',on_click = lambda: loadChart('PQRs')).props('size=sm')
-                    ui.button('RED vs UVT chart', on_click = lambda: loadChart('REDvsUVT')).props('size=sm')
+                    ui.button('PQR chart', on_click = loadChartPQR).props('size=sm')
+                    #ui.button('RED vs UVT chart', on_click = loadChartRED).props('size=sm')
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
@@ -352,5 +357,5 @@ with ui.row():
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
 
 if __name__ == "__main__":
-    #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=False)
-    ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
+    ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=True)
+    #ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
