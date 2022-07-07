@@ -89,7 +89,8 @@ async def optimize():
     opbutton.visible = True # Restore button visibility
 
     loadChartPQR()
-    RED_UVT_chart.visible = True
+    RED_UVT_chartMin.visible = True
+    RED_UVT_chartMax.visible = True
 
 def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
@@ -193,7 +194,8 @@ def uvt(minmax):
         if maxUVT.value < minUVT.value:
             minUVT.__setattr__('value', maxUVT.value)
 
-def loadChartRED():
+def loadChartRED(minmax):
+
     tableData = table.options.to_dict()['rowData']
 
     chart.options['chart']['type'] = 'scatter'
@@ -202,7 +204,10 @@ def loadChartRED():
     chart.options['xAxis'] = {'title': {'text': 'UVT [%-1cm]'}}
     chart.options['yAxis'] = {'title': {'text': 'RED [mJ/cm²]'}}
     chart.options['title'] = {'text': 'RED vs. UVT'}
-    chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Q=100[m³/h]'}
+    if minmax == 'min':
+        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Minimum Flow'}
+    elif minmax =='max':
+        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Maximum Flow'}
     chart.options['series'] = []  # Initialize Empty
 
     # Add all the systems into the list
@@ -215,11 +220,18 @@ def loadChartRED():
 
     UVTs = np.round(np.linspace(70, 98), 1)
     for system in systems:
-        REDs = [PQR_optimizer.RED(module=opt_config.systems[system], P=100, Flow=100,
+        minFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMin']
+        maxFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMax']
+        if minmax == 'min':
+            qFlow = minFlow
+        elif minmax =='max':
+            qFlow = maxFlow
+
+        REDs = [PQR_optimizer.RED(module=opt_config.systems[system], P=100, Flow=qFlow,
                                   UVT=uvt, UVT215=uvt, Status=100, D1Log=18, NLamps=opt_config.NLamps[system])
                 for uvt in UVTs]
 
-        chart.options['series'].append({'name': system, 'data': [list(_) for _ in zip(UVTs, REDs)]})
+        chart.options['series'].append({'name': system+' at '+str(qFlow)+'[m³/h]', 'data': [list(_) for _ in zip(UVTs, REDs)]})
 
 def loadChartPQR():
     chart.options['series'] = []  # Initialize Empty
@@ -311,8 +323,10 @@ with ui.row():
                 }).classes('h-64')
                 with ui.row():
                     PQR_chart = ui.button('PQR chart', on_click = loadChartPQR).props('size=sm')
-                    RED_UVT_chart = ui.button('RED vs UVT chart', on_click = loadChartRED).props('size=sm')
-                    RED_UVT_chart.visible = False
+                    RED_UVT_chartMin = ui.button('RED vs UVT chart at Qmin', on_click = lambda: loadChartRED('min')).props('size=sm')
+                    RED_UVT_chartMax = ui.button('RED vs UVT chart at Qmax', on_click = lambda: loadChartRED('max')).props('size=sm')
+                    RED_UVT_chartMin.visible = False
+                    RED_UVT_chartMax.visible = False
 
         with ui.card().classes('bg-yellow-300 w-full h-64'):
             table = ui.table({
@@ -363,6 +377,7 @@ with ui.row():
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.01</strong></p>')
 
 if __name__ == "__main__":
     #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=True)
