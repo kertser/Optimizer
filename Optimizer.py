@@ -194,19 +194,24 @@ def uvt(minmax):
             minUVT.__setattr__('value', maxUVT.value)
 
 def loadChartRED():
+    tableData = table.options.to_dict()['rowData']
+
     chart.options['chart']['type'] = 'scatter'
     chart.options['legend'] = {'borderWidth': 1, 'backgroundColor': 'white', 'x': 70, 'y': 60, 'shadow': True,
                                'layout': 'vertical', 'align': 'left', 'verticalAlign': 'top', 'floating': True}
     chart.options['xAxis'] = {'title': {'text': 'UVT [%-1cm]'}}
     chart.options['yAxis'] = {'title': {'text': 'RED [mJ/cm²]'}}
     chart.options['title'] = {'text': 'RED vs. UVT'}
-    chart.options['subtitle'] = {'text': 'Validated Systems at Q=100[m³/h]'}
+    chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Q=100[m³/h]'}
     chart.options['series'] = []  # Initialize Empty
 
     # Add all the systems into the list
+    """
     systems = []
     for _ in opt_config.validatedFamilies:
         systems.append(list(filter(lambda t: _ in t, opt_config.systems.keys()))[0])  # Just the first types
+    """
+    systems = [tableLine['system'] for tableLine in tableData][:5]
 
     UVTs = np.round(np.linspace(70, 98), 1)
     for system in systems:
@@ -360,5 +365,5 @@ with ui.row():
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
 
 if __name__ == "__main__":
-    ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=True)
-    #ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
+    #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=True)
+    ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
