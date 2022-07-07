@@ -114,6 +114,13 @@ def reset(): # Reset everything
     maxFlow.__setattr__('value', pquvt.maxQ)
     minUVT.__setattr__('value', pquvt.minUVT)
     maxUVT.__setattr__('value', pquvt.maxUVT)
+    targetRED_input.__setattr__('value',pquvt.targetRED)
+    redMargin_input.__setattr__('value',pquvt.redMargin)
+    D1Log_input.__setattr__('value',pquvt.D1Log)
+    RED_UVT_chartMin.visible = False
+    RED_UVT_chartMax.visible = False
+    loadChartPQR()
+
 
 def clearAll():
     for _ in opt_config.reactor_families:
@@ -219,9 +226,12 @@ def loadChartRED(minmax):
     systems = [tableLine['system'] for tableLine in tableData][:5]
 
     UVTs = np.round(np.linspace(70, 98), 1)
+    minFlow = max([[x for x in tableData[:5] if x['system'] == system][0]['qMin'] for system in systems])
+    maxFlow = min([[x for x in tableData[:5] if x['system'] == system][0]['qMax'] for system in systems])
+
     for system in systems:
-        minFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMin']
-        maxFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMax']
+        #minFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMin']
+        #maxFlow = [x for x in tableData[:5] if x['system'] == system][0]['qMax']
         if minmax == 'min':
             qFlow = minFlow
         elif minmax =='max':
@@ -256,6 +266,7 @@ def loadChartPQR():
 #%% --- Main Frame ---
 
 ui.colors()
+
 
 with ui.row():
     with ui.column():
@@ -380,5 +391,5 @@ with ui.row():
 ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.01</strong></p>')
 
 if __name__ == "__main__":
-    #ui.run(title = 'Optimizer', host='127.0.0.1', reload=False, favicon='configuration.ico',show=True)
-    ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
+    ui.run(title='Optimizer', host='127.0.0.1', reload=False, favicon='optimize.ico',show=True)
+    #ui.run(title='Optimizer', reload=True, favicon='configuration.ico', show=True)
