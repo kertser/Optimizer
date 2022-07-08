@@ -265,13 +265,35 @@ def loadChartPQR():
 
 #%% --- Main Frame ---
 
+# Help Dialog:
+with ui.dialog() as help_dialog, ui.card():
+    ui.markdown('### PQR Optimization Tool for UV-Systems\n'
+                'Pleasee apply to [Atlantium Technologies](https://atlantium.com/) website for more information.')
+    ui.html('<p>This tool is intended to provide a global parametic optimization in terms of <strong>PQR</strong>:<br>'
+            '<strong>P</strong>ower-to-<strong>F</strong>low <strong>R</strong>atio, '
+            'which is similar to the  <strong>Cost-Per-Treated-Volume</strong> for the Atlantum UV-Reactors Family</p>')
+    ui.html('<p><u>Steps to work with the tool:</u></p>'
+            '<p><strong>1:</strong> Choose the parametric range in terms of minimum/maximum for Power[%], Flow Rate[m³/h] and UVT254[%-1cm].<br>'
+            '<strong>2:</strong> Choose the target UV-Dose, D1-Log inactivation dose and algorythmic accuracy tolerance.<br>'
+            '<strong>3:</strong> Select the relevant UV-reactors by family and/or by  specific branch. One may filter out the validated systems only.<br>'
+            '<strong>4:</strong> Push the "Optimize by PQR" button to start global search process.<br>'
+            '<strong>5:</strong> The algorithm performes a "simplicial homology global optimization" search for an optimal solution inside the selected range, so that '
+            'the cost-per-treated volume for the selected reactor, in terms of PQR value, will provide the specified UV-Dose within the set tolerance. '
+            'Note that every UV-reactor type has a specific operating parametric range, so that the algorythm will search inside these limits only.<br>'
+            'Some of the reactors will not have a solution for the selected target dose and/or accuracy tolerance<br>'
+            '<strong>6:</strong> As soon as the algorithm finishes the optimization, it will populte the ranged table with the most '
+            'relevant UV-reactor types at the top of the table. You may find the relevant bar chart of this range at the top-right of the calculator window.<br>'
+            '<strong>7:</strong> One may take a look at the additional charts/graphs for the 5 best performing UV-systems and export the table in CSV format.</p>')
+
+    ui.button('Close and back to the PQR tool', on_click=help_dialog.close)
+
+# Main Window:
+
 ui.colors()
-
-
 with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
-            with ui.card().classes('max-w-full mr-2'):
+            with ui.card().classes('max-w-full mr-2').tooltip('Select the parametric range with the target Dose and tolarance parameters for PQR optimization'):
                 ui.label('Control Variables:').classes('text-h7 underline')
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
@@ -355,16 +377,19 @@ with ui.row():
                     'rowData': [],
                 })
 
-        with ui.card().classes('bg-yellow-300 w-full'):
+        with ui.card().classes('bg-yellow-300 w-full').tooltip('Push the "Optimize" button to range the '
+                                                               'systems by PQR inside the selected parametric range'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
                     opbutton = ui.button('Optimize by PQR', on_click=optimize)
                     reset = ui.button('Reset All', on_click=reset)
-                export = ui.button('Export to csv', on_click=export_to_CSV)
+                with ui.row().classes('relative right-0'):
+                    export = ui.button('Export to csv', on_click=export_to_CSV)
+                    help = ui.button(on_click=help_dialog.open).props('icon=help').tooltip('Help!')
     # Switches
     switch = {}
     subswitch = {}
-    with ui.card().classes('w-62 -space-y-2'):
+    with ui.card().classes('w-62 -space-y-2').tooltip('Reduce the list of systems to be compared'):
         ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
         ui.label('Specific Reactor Types:').classes('text-h8 underline')
         validatedOnly = ui.button('Select Validated Systems Only', on_click=validatedOnly).props(
@@ -388,7 +413,7 @@ with ui.row():
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.01</strong></p>')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.02</strong></p>')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', host='127.0.0.1', reload=False, favicon='optimize.ico',show=True)
