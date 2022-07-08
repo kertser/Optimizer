@@ -264,7 +264,7 @@ def loadChartPQR():
 
 
 #%% --- Main Frame ---
-
+ui.colors()
 # Help Dialog:
 with ui.dialog() as help_dialog, ui.card():
     ui.markdown('### PQR Optimization Tool for UV-Systems\n'
@@ -288,12 +288,10 @@ with ui.dialog() as help_dialog, ui.card():
     ui.button('Close and back to the PQR tool', on_click=help_dialog.close)
 
 # Main Window:
-
-ui.colors()
 with ui.row():
     with ui.column():
         with ui.row().classes('flex items-stretch'):
-            with ui.card().classes('max-w-full mr-2').tooltip('Select the parametric range with the target Dose and tolarance parameters for PQR optimization'):
+            with ui.card().classes('max-w-full mr-2'):
                 ui.label('Control Variables:').classes('text-h7 underline')
                 with ui.row().classes('max-w-full space-x-2'): #Power
                     P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
@@ -377,19 +375,18 @@ with ui.row():
                     'rowData': [],
                 })
 
-        with ui.card().classes('bg-yellow-300 w-full').tooltip('Push the "Optimize" button to range the '
-                                                               'systems by PQR inside the selected parametric range'):
+        with ui.card().classes('bg-yellow-300 w-full'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
                     opbutton = ui.button('Optimize by PQR', on_click=optimize)
                     reset = ui.button('Reset All', on_click=reset)
                 with ui.row().classes('relative right-0'):
                     export = ui.button('Export to csv', on_click=export_to_CSV)
-                    help = ui.button(on_click=help_dialog.open).props('icon=help').tooltip('Help!')
+                    help = ui.button(on_click=help_dialog.open).props('icon=help')
     # Switches
     switch = {}
     subswitch = {}
-    with ui.card().classes('w-62 -space-y-2').tooltip('Reduce the list of systems to be compared'):
+    with ui.card().classes('w-62 -space-y-2'):
         ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
         ui.label('Specific Reactor Types:').classes('text-h8 underline')
         validatedOnly = ui.button('Select Validated Systems Only', on_click=validatedOnly).props(
@@ -416,5 +413,5 @@ with ui.row():
 ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.02</strong></p>')
 
 if __name__ == "__main__":
-    #ui.run(title='Optimizer', host='127.0.0.1', reload=False, show=True)
+    #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
     ui.run(title='Optimizer', reload=True, show=True)
