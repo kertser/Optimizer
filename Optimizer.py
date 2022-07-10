@@ -268,20 +268,20 @@ ui.colors()
 # Help Dialog:
 with ui.dialog() as help_dialog, ui.card():
     ui.markdown('### PQR Optimization Tool for UV-Systems\n'
-                'Pleasee apply to [Atlantium Technologies](https://atlantium.com/) website for more information.')
-    ui.html('<p>This tool is intended to provide a global parametic optimization in terms of <strong>PQR</strong>:<br>'
+                'Please apply to [Atlantium Technologies](https://atlantium.com/) website for more information.')
+    ui.html('<p>This tool is intended to provide a global parametric optimization in terms of <strong>PQR</strong>:<br>'
             '<strong>P</strong>ower-to-<strong>F</strong>low <strong>R</strong>atio, '
-            'which is similar to the  <strong>Cost-Per-Treated-Volume</strong> for the Atlantum UV-Reactors Family</p>')
+            'which is similar to the <strong>Cost-Per-Treated-Volume</strong> for the Atlantium UV-Reactors Family</p>')
     ui.html('<p><u>Steps to work with the tool:</u></p>'
             '<p><strong>1:</strong> Choose the parametric range in terms of minimum/maximum for Power[%], Flow Rate[m³/h] and UVT254[%-1cm].<br>'
-            '<strong>2:</strong> Choose the target UV-Dose, D1-Log inactivation dose and algorythmic accuracy tolerance.<br>'
+            '<strong>2:</strong> Choose the target UV-Dose, D1-Log inactivation dose and algorithmic accuracy tolerance.<br>'
             '<strong>3:</strong> Select the relevant UV-reactors by family and/or by  specific branch. One may filter out the validated systems only.<br>'
             '<strong>4:</strong> Push the "Optimize by PQR" button to start global search process.<br>'
-            '<strong>5:</strong> The algorithm performes a "simplicial homology global optimization" search for an optimal solution inside the selected range, so that '
+            '<strong>5:</strong> The algorithm performs a "simplicial homology global optimization" search for an optimal solution inside the selected range, so that '
             'the cost-per-treated volume for the selected reactor, in terms of PQR value, will provide the specified UV-Dose within the set tolerance. '
-            'Note that every UV-reactor type has a specific operating parametric range, so that the algorythm will search inside these limits only.<br>'
+            'Note that every UV-reactor type has a specific operating parametric range, so that the algorithm will search inside these limits only.<br>'
             'Some of the reactors will not have a solution for the selected target dose and/or accuracy tolerance<br>'
-            '<strong>6:</strong> As soon as the algorithm finishes the optimization, it will populte the ranged table with the most '
+            '<strong>6:</strong> As soon as the algorithm finishes the optimization, it will populate the ranged table with the most '
             'relevant UV-reactor types at the top of the table. You may find the relevant bar chart of this range at the top-right of the calculator window.<br>'
             '<strong>7:</strong> One may take a look at the additional charts/graphs for the 5 best performing UV-systems and export the table in CSV format.</p>')
 
