@@ -262,6 +262,26 @@ def loadChartPQR():
 
     # print(PQR_optimizer.specificPQR(system=system,P=100,Status=100,UVT254=maxUVT,targetRED=40))
 
+def checkPower(P):
+    # helper function for numeric input of Power (min/max)
+    if P.value < PQUVT().minP:
+        minP_number.value = PQUVT().minP
+    if P.value > PQUVT().maxP:
+        maxP_number.value = PQUVT().maxP
+
+def checkFlow(Q):
+    # helper function for numeric input of Flow (min/max)
+    if Q.value < PQUVT().minQ:
+        minQ_number.value = PQUVT().minQ
+    if Q.value > PQUVT().maxQ:
+        maxQ_number.value = PQUVT().maxQ
+
+def checkUVT(UVT):
+    # helper function for numeric input of UVT (min/max)
+    if UVT.value < PQUVT().minUVT:
+        minUVT_number.value = PQUVT().minUVT
+    if UVT.value > PQUVT().maxUVT:
+        maxUVT_number.value = PQUVT().maxUVT
 
 #%% --- Main Frame ---
 ui.colors()
@@ -294,49 +314,59 @@ with ui.row():
             with ui.card().classes('max-w-full mr-2'):
                 ui.label('Control Variables:').classes('text-h7 underline')
                 with ui.row().classes('max-w-full space-x-2'): #Power
-                    P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
+                    # P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        minPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.minP,on_change=lambda: power('min')).bind_value_to(pquvt,'minP').props('label')
+                        minPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.minP,on_change=lambda: power('min')).bind_value(pquvt,'minP').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Power:')
                             ui.label().bind_text_from(minPower, 'value').classes('font-black')
                             ui.label('[%]')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        maxPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.maxP,on_change=lambda: power('max')).bind_value_to(pquvt,'maxP').props('label')
+                        maxPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.maxP,on_change=lambda: power('max')).bind_value(pquvt,'maxP').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Power:')
                             ui.label().bind_text_from(maxPower, 'value').classes('font-black')
                             ui.label('[%]')
-
+                    minP_number = ui.number(label='Pmin', format='%.0f', on_change=lambda x: checkPower(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'minP')
+                    maxP_number = ui.number(label='Pmax', format='%.0f', on_change=lambda x: checkPower(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'maxP')
                 with ui.row().classes('max-w-full space-x-2'): # Flow
-                    Q_check = ui.checkbox('Flow:',value=True).classes('max-w-full w-20')
+                    # Q_check = ui.checkbox('Flow:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.minQ,on_change=lambda: flow('min')).bind_value_to(pquvt,'minQ').props('label')
+                        minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10,  value=pquvt.minQ, on_change=lambda: flow('min')).bind_value(pquvt,'minQ').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Flow:')
                             ui.label().bind_text_from(minFlow, 'value').classes('font-black')
                             ui.label('[m³/h]')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, value=pquvt.maxQ,on_change=lambda: flow('max')).bind_value_to(pquvt,'maxQ').props('label')
+                        maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10, value=pquvt.maxQ, on_change=lambda: flow('max')).bind_value(pquvt,'maxQ').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Flow:')
                             ui.label().bind_text_from(maxFlow, 'value').classes('font-black')
                             ui.label('[m³/h]')
-
+                    minQ_number = ui.number(label='minFlow', format='%.0f', on_change=lambda x: checkFlow(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'minQ')
+                    maxQ_number = ui.number(label='maxFlow', format='%.0f', on_change=lambda x: checkFlow(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'maxQ')
                 with ui.row().classes('max-w-full space-x-2'): # UVT
-                    UVT_check = ui.checkbox('UVT:',value=True).classes('max-w-full w-20')
+                    # UVT_check = ui.checkbox('UVT:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        minUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.minUVT,on_change=lambda: uvt('min')).bind_value_to(pquvt,'minUVT').props('label')
+                        minUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.minUVT,on_change=lambda: uvt('min')).bind_value(pquvt,'minUVT').props('label')
                         with ui.row() as row:
                             ui.label('Minimum UVT:')
                             ui.label().bind_text_from(minUVT, 'value').classes('font-black')
                             ui.label('[%-1cm]')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
-                        maxUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.maxUVT,on_change=lambda: uvt('max')).bind_value_to(pquvt,'maxUVT').props('label')
+                        maxUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.maxUVT,on_change=lambda: uvt('max')).bind_value(pquvt,'maxUVT').props('label')
                         with ui.row() as row:
                             ui.label('Maximum UVT:')
                             ui.label().bind_text_from(maxUVT, 'value').classes('font-black')
                             ui.label('[%-1cm]')
+                    minUVT_number = ui.number(label='minUVT', format='%.0f', on_change=lambda x: checkUVT(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'minUVT')
+                    maxUVT_number = ui.number(label='maxUVT', format='%.0f', on_change=lambda x: checkUVT(x)).classes(
+                        'font-black w-14 h-1').bind_value(pquvt,'maxUVT')
                 with ui.row().classes('w-full justify-evenly'):
                     targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
                                                 format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
@@ -413,5 +443,5 @@ with ui.row():
 ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.02</strong></p>')
 
 if __name__ == "__main__":
-    #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
-    ui.run(title='Optimizer', reload=True, show=True)
+    ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
+    #ui.run(title='Optimizer', reload=True, show=True)
