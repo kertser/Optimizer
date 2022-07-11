@@ -443,5 +443,5 @@ with ui.row():
 ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.02</strong></p>')
 
 if __name__ == "__main__":
-    ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
-    #ui.run(title='Optimizer', reload=True, show=True)
+    #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
+    ui.run(title='Optimizer', reload=True, show=True)
