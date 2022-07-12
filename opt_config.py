@@ -54,6 +54,9 @@ namespace = {
     'NLamps': 'NLamps'
 }
 
+m3h_2_gpm = 4.40 #1 m^3/h in gpms
+flowUnits = 'm3h'
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:

@@ -35,8 +35,14 @@ class PQUVT:
         # Initial Values can be changed later
         self.minP = 40
         self.maxP = 100
-        self.minQ = 10
-        self.maxQ = 2000
+        if opt_config.flowUnits == 'm3h':
+            self.minQ = 10
+            self.maxQ = 2000
+            self.flowUnits = '[m³/h]'
+        else:
+            self.minQ = 10*opt_config.m3h_2_gpm
+            self.maxQ = 2000*opt_config.m3h_2_gpm
+            self.flowUnits = '[gpm]'
         self.minUVT = 25
         self.maxUVT = 99
         self.targetRED = 40
@@ -218,11 +224,7 @@ def loadChartRED(minmax):
     chart.options['series'] = []  # Initialize Empty
 
     # Add all the systems into the list
-    """
-    systems = []
-    for _ in opt_config.validatedFamilies:
-        systems.append(list(filter(lambda t: _ in t, opt_config.systems.keys()))[0])  # Just the first types
-    """
+
     systems = [tableLine['system'] for tableLine in tableData][:5]
 
     UVTs = np.round(np.linspace(70, 98), 1)
@@ -283,6 +285,23 @@ def checkUVT(UVT):
     if UVT.value > PQUVT().maxUVT:
         maxUVT_number.value = PQUVT().maxUVT
 
+def changeFlowUnits():
+    # Change the flow units whenever the button is pressed
+    if pquvt.flowUnits == '[m³/h]':
+        pquvt.minQ = round(pquvt.minQ * opt_config.m3h_2_gpm,0)
+        pquvt.maxQ = round(pquvt.maxQ * opt_config.m3h_2_gpm,0)
+        pquvt.flowUnits = '[gpm]'
+        opt_config.flowUnits = 'gpm'
+    elif pquvt.flowUnits == '[gpm]':
+        pquvt.minQ = round(pquvt.minQ / opt_config.m3h_2_gpm,0)
+        pquvt.maxQ = round(pquvt.maxQ / opt_config.m3h_2_gpm,0)
+        pquvt.flowUnits = '[m³/h]'
+        opt_config.flowUnits = 'm3h'
+    maxFlow.view.__setattr__('max', round(PQUVT().maxQ, 0))
+    maxFlow.view.__setattr__('min', round(PQUVT().minQ, 0))
+    minFlow.view.__setattr__('max', round(PQUVT().maxQ, 0))
+    minFlow.view.__setattr__('min', round(PQUVT().minQ, 0))
+
 #%% --- Main Frame ---
 ui.colors()
 # Help Dialog:
@@ -335,16 +354,18 @@ with ui.row():
                     # Q_check = ui.checkbox('Flow:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
                         minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10,  value=pquvt.minQ, on_change=lambda: flow('min')).bind_value(pquvt,'minQ').props('label')
-                        with ui.row() as row:
+                        with ui.row().classes('-space-x-3 w-full justify-evenly'):
                             ui.label('Minimum Flow:')
                             ui.label().bind_text_from(minFlow, 'value').classes('font-black')
-                            ui.label('[m³/h]')
+                            #ui.label('[m³/h]')
+                            minFlowUnits = ui.button('[m³/h]', on_click = changeFlowUnits).props('outline size=xs').bind_text_from(pquvt,'flowUnits')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
                         maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10, value=pquvt.maxQ, on_change=lambda: flow('max')).bind_value(pquvt,'maxQ').props('label')
-                        with ui.row() as row:
+                        with ui.row().classes('-space-x-3 w-full justify-evenly'):
                             ui.label('Maximum Flow:')
                             ui.label().bind_text_from(maxFlow, 'value').classes('font-black')
-                            ui.label('[m³/h]')
+                            #ui.label('[m³/h]')
+                            maxFlowUnits = ui.button('[m³/h]', on_click=changeFlowUnits).props('outline size=xs').bind_text_from(pquvt,'flowUnits')
                     minQ_number = ui.number(label='minFlow', format='%.0f', on_change=lambda x: checkFlow(x)).classes(
                         'font-black w-14 h-1').bind_value(pquvt,'minQ')
                     maxQ_number = ui.number(label='maxFlow', format='%.0f', on_change=lambda x: checkFlow(x)).classes(
@@ -440,7 +461,7 @@ with ui.row():
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.02</strong></p>')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.04</strong></p>')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
