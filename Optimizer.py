@@ -1,7 +1,5 @@
 """
 #TODO:
-Set the validated systems to RZ-104, RZ-163 regular 2 lamps and higher, RZ-163UHP and RZ-300
-Drop R200
 add head loss output in mH2O, PSI, inH2O
 add max operation pressure to the control variables in bar, PSI
 add a target pathogen and log reduction as control variables (optimize for log-inactivation)
@@ -13,7 +11,6 @@ import PQR_optimizer
 import opt_config
 from nicegui import ui
 import asyncio
-#import csv
 import numpy as np
 
 class PQUVT:
@@ -145,8 +142,8 @@ def validatedOnly():
     for _ in opt_config.validatedFamilies:
         switch[_].value = True
     # This is a specific requirement to "unvalidate" RZ-163-11 system
-    opt_config.valid_systems.remove('RZ-163_Regular-11')
-    subswitch['RZ-163_Regular-11'].props('color=gray text-color=green')
+    opt_config.valid_systems.remove('RZ-163_Reg-11')
+    subswitch['RZ-163_Reg-11'].props('color=gray text-color=green')
 
 def add_remove_system(e):
     # Filter-out the systems per family
@@ -387,20 +384,20 @@ with ui.dialog() as help_dialog, ui.card():
     ui.button('Close and back to the PQR tool', on_click=help_dialog.close)
 
 # Main Window:
-with ui.row():
-    with ui.column():
-        with ui.row().classes('flex items-stretch'):
-            with ui.card().classes('max-w-full mr-2'):
+with ui.row().classes('no-wrap'):
+    with ui.column().classes('no-wrap'):
+        with ui.row().classes('flex items-stretch no-wrap'):
+            with ui.card().classes('max-w-full mr-2 no-wrap'):
                 ui.label('Control Variables:').classes('text-h7 underline')
-                with ui.row().classes('max-w-full space-x-2'): #Power
+                with ui.row().classes('max-w-full space-x-2 no-wrap'): #Power
                     # P_check = ui.checkbox('Power:',value=True).classes('max-w-full w-20')
-                    with ui.column().classes('max-w-full -space-y-5 w-52'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52 no-wrap'):
                         minPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.minP,on_change=lambda: power('min')).bind_value(pquvt,'minP').props('label')
                         with ui.row() as row:
                             ui.label('Minimum Power:')
                             ui.label().bind_text_from(minPower, 'value').classes('font-black')
                             ui.label('[%]')
-                    with ui.column().classes('max-w-full -space-y-5 w-52'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52 no-wrap'):
                         maxPower = ui.slider(min=pquvt.minP, max=pquvt.maxP, value=pquvt.maxP,on_change=lambda: power('max')).bind_value(pquvt,'maxP').props('label')
                         with ui.row() as row:
                             ui.label('Maximum Power:')
@@ -410,16 +407,16 @@ with ui.row():
                         'font-black w-14 h-1').bind_value(pquvt,'minP')
                     maxP_number = ui.number(label='Pmax', format='%.0f', on_change=lambda x: checkPower(x)).classes(
                         'font-black w-14 h-1').bind_value(pquvt,'maxP')
-                with ui.row().classes('max-w-full space-x-2'): # Flow
+                with ui.row().classes('max-w-full space-x-2 no-wrap'): # Flow
                     # Q_check = ui.checkbox('Flow:',value=True).classes('max-w-full w-20')
-                    with ui.column().classes('max-w-full -space-y-5 w-52'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52 no-wrap'):
                         minFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10,  value=pquvt.minQ, on_change=lambda: flow('min')).bind_value(pquvt,'minQ').props('label')
                         with ui.row().classes('-space-x-3 w-full justify-evenly'):
                             ui.label('Minimum Flow:')
                             ui.label().bind_text_from(minFlow, 'value').classes('font-black')
                             #ui.label('[m³/h]')
                             minFlowUnits = ui.button('[m³/h]', on_click = changeFlowUnits).props('outline size=xs').bind_text_from(pquvt,'flowUnits')
-                    with ui.column().classes('max-w-full -space-y-5 w-52'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52 no-wrap'):
                         maxFlow = ui.slider(min=pquvt.minQ, max=pquvt.maxQ, step=10, value=pquvt.maxQ, on_change=lambda: flow('max')).bind_value(pquvt,'maxQ').props('label')
                         with ui.row().classes('-space-x-3 w-full justify-evenly'):
                             ui.label('Maximum Flow:')
@@ -430,7 +427,7 @@ with ui.row():
                         'font-black w-14 h-1').bind_value(pquvt,'minQ')
                     maxQ_number = ui.number(label='maxFlow', format='%.0f', on_change=lambda x: checkFlow(x)).classes(
                         'font-black w-14 h-1').bind_value(pquvt,'maxQ')
-                with ui.row().classes('max-w-full space-x-2'): # UVT
+                with ui.row().classes('max-w-full space-x-2 no-wrap'): # UVT
                     # UVT_check = ui.checkbox('UVT:',value=True).classes('max-w-full w-20')
                     with ui.column().classes('max-w-full -space-y-5 w-52'):
                         minUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.minUVT,on_change=lambda: uvt('min')).bind_value(pquvt,'minUVT').props('label')
@@ -438,7 +435,7 @@ with ui.row():
                             ui.label('Minimum UVT:')
                             ui.label().bind_text_from(minUVT, 'value').classes('font-black')
                             ui.label('[%-1cm]')
-                    with ui.column().classes('max-w-full -space-y-5 w-52'):
+                    with ui.column().classes('max-w-full -space-y-5 w-52 no-wrap'):
                         maxUVT = ui.slider(min=pquvt.minUVT, max=pquvt.maxUVT, value=pquvt.maxUVT,on_change=lambda: uvt('max')).bind_value(pquvt,'maxUVT').props('label')
                         with ui.row() as row:
                             ui.label('Maximum UVT:')
@@ -448,7 +445,7 @@ with ui.row():
                         'font-black w-14 h-1').bind_value(pquvt,'minUVT')
                     maxUVT_number = ui.number(label='maxUVT', format='%.0f', on_change=lambda x: checkUVT(x)).classes(
                         'font-black w-14 h-1').bind_value(pquvt,'maxUVT')
-                with ui.row().classes('w-full justify-evenly'):
+                with ui.row().classes('w-full justify-evenly no-wrap'):
                     targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
                                                 format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
                     redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
@@ -456,7 +453,7 @@ with ui.row():
                     D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
                                                 format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
 
-            with ui.card():
+            with ui.card().classes('no-wrap'):
                 chart = ui.chart({
                     'title': {'text': 'Run PQR Optimization to make the chart available'},
                     'chart': {'height': 270, 'zoomType': 'y'},
@@ -470,7 +467,7 @@ with ui.row():
                     RED_UVT_chartMin.visible = False
                     RED_UVT_chartMax.visible = False
 
-        with ui.card().classes('bg-yellow-300 w-full h-64'):
+        with ui.card().classes('bg-yellow-300 w-full h-64 no-wrap'):
             table = ui.table({
                 'columnDefs': [
                         {'headerName': 'System Type', 'field': 'system'},
@@ -504,7 +501,7 @@ with ui.row():
             table.options.columnDefs[9].__setattr__('filter', 'agNumberColumnFilter') # dP
 
 
-        with ui.card().classes('bg-yellow-300 w-full'):
+        with ui.card().classes('bg-yellow-300 w-full no-wrap'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
                     opbutton = ui.button('Optimize by PQR', on_click=optimize)
@@ -515,31 +512,31 @@ with ui.row():
     # Switches
     switch = {}
     subswitch = {}
-    with ui.card().classes('w-62 -space-y-2'):
-        ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px')
-        ui.label('Specific Reactor Types:').classes('text-h8 underline')
-        validatedOnly = ui.button('Select Validated Systems Only', on_click=validatedOnly).props(
-            'rounded align=around icon=directions size=sm')
-        with ui.column().classes('-space-y-6'):
+    with ui.card().classes('max-w-full w-64 -space-y-1 no-wrap'):
+        ui.image('https://atlantium.com/wp-content/uploads/2020/03/Atlantium_Logo_Final_white3.png').style('width:200px').classes('no-wrap')
+        ui.label('Specific Reactor Types:').classes('text-h8 underline no-wrap')
+        validatedOnly = ui.button('Choose Validated Models Only', on_click=validatedOnly).props(
+            'rounded align=around icon=directions size=sm').classes('no-wrap')
+        with ui.column().classes('-space-y-6 no-wrap'):
             for reactor_type in opt_config.reactor_families:
-                with ui.row().classes('w-full justify-between'):
+                with ui.row().classes('w-full justify-between no-wrap'):
                     # Main switch
-                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e))
+                    switch[reactor_type]=ui.switch(reactor_type, value=True, on_change=lambda e: add_remove_system(e)).classes('no-wrap')
                     setattr(switch[reactor_type], 'type', reactor_type)
                     # Subsystem switches
-                    with ui.row().classes('pt-3 -space-x-3'):
+                    with ui.row().classes('pt-3 -space-x-3 no-wrap'):
                         for sub_type in opt_config.reactor_subtypes(reactor_type):
                             subswitch[reactor_type+'-'+sub_type] = ui.button(
                                 sub_type, on_click=lambda z: add_remove_subsystem(z)
-                            ).props('push rounded dense size=xs')
+                            ).props('push rounded dense size=xs').classes('no-wrap')
                             setattr(subswitch[reactor_type+'-'+sub_type], 'model', (reactor_type,sub_type))
 
-            ui.html('<br>')
-            with ui.row().classes('w-full justify-between'):
-                clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
-                enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
-        ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.07</strong></p>')
+            ui.html('<br><br>').classes('no-wrap')
+            with ui.row().classes('w-full justify-between no-wrap'):
+                clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around').classes('no-wrap')
+                enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around').classes('no-wrap')
+        ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:78px').classes('no-wrap')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.08</strong></p>').classes('no-wrap')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
