@@ -500,7 +500,6 @@ with ui.row().classes('no-wrap'):
             table.options.columnDefs[1].__setattr__('filter', 'agNumberColumnFilter') # PQR
             table.options.columnDefs[9].__setattr__('filter', 'agNumberColumnFilter') # dP
 
-
         with ui.card().classes('bg-yellow-300 w-full no-wrap'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
