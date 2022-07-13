@@ -1,25 +1,12 @@
 """
-More info for deployment and examples:
-https://nicegui.io/
-You can call ui.run() with optional arguments:
-
-host (default: '0.0.0.0')
-port (default: 8080)
-title (default: 'NiceGUI')
-favicon (default: 'favicon.ico')
-dark: whether to use Quasar's dark mode (default: False, use None for "auto" mode)
-reload: automatically reload the ui on file changes (default: True)
-show: automatically open the ui in a browser tab (default: True)
-on_connect: default function or coroutine which is called for each new client connection; the optional request argument provides session infos
-uvicorn_logging_level: logging level for uvicorn server (default: 'warning')
-uvicorn_reload_dirs: string with comma-separated list for directories to be monitored (default is current working directory only)
-uvicorn_reload_includes: string with comma-separated list of glob-patterns which trigger reload on modification (default: '.py')
-uvicorn_reload_excludes: string with comma-separated list of glob-patterns which should be ignored for reload (default: '.*, .py[cod], .sw.*, ~*')
-main_page_classes: configure Quasar classes of main page (default: 'q-ma-md column items-start')
-binding_refresh_interval: time between binding updates (default: 0.1 seconds, bigger is more cpu friendly)
-interactive: used internally when run in interactive Python shell (default: False)
-The environment variables HOST and PORT can also be used to configure NiceGUI.
-
+#TODO:
+Set the validated systems to RZ-104, RZ-163 regular 2 lamps and higher, RZ-163UHP and RZ-300
+Drop R200
+add head loss output in mH2O, PSI, inH2O
+add max operation pressure to the control variables in bar, PSI
+add a target pathogen and log reduction as control variables (optimize for log-inactivation)
+optimze for UV-Dose
+optimize for pressure
 """
 
 import PQR_optimizer
@@ -28,7 +15,6 @@ from nicegui import ui
 import asyncio
 #import csv
 import numpy as np
-#from matplotlib import pyplot as plt
 
 class PQUVT:
     def __init__(self):
@@ -78,6 +64,10 @@ async def optimize():
                                                               minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
                                                               iters = iters,targetRED=pquvt.targetRED,
                                                               redMargin=pquvt.redMargin,D1Log=pquvt.D1Log)
+
+                # Calculate the pressure drop at the selected flow rate xOpt[1]
+                dP = PQR_optimizer.HeadLoss(module=opt_config.systems[system],Flow=xOpt[1]/unit_multiplier,NLamps=opt_config.NLamps[system])
+
                 PQROpt /= unit_multiplier # In this case we want to return the flow in the P/Q in actual units.
                 iters += 1
                 if iters == max_iters:
@@ -87,7 +77,8 @@ async def optimize():
                 'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
                 'pMin': max(int(opt_config.Pmin_max(system)[0]),pquvt.minP), 'pMax': min(int(opt_config.Pmin_max(system)[1]),pquvt.maxP),
                 'qMin': max(int(opt_config.Qmin_max(system)[0])*unit_multiplier,pquvt.minQ), 'qMax': min(int(opt_config.Qmin_max(system)[1])*unit_multiplier,pquvt.maxQ),
-                'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT)
+                'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT),
+                'dP': dP
             })
             await table.view.update()
             await asyncio.sleep(1)
@@ -110,7 +101,7 @@ def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
     columnDefs = [line['headerName'] for line in table.options.to_dict()['columnDefs']]
     with open('best_reactors.csv', 'w') as f:
-        [f.write("%s," % (_).replace("²", "^2").replace("³", "^3")) for _ in columnDefs]
+        [f.write("%s," % (_).replace("²", "^2").replace("³", "^3").replace("Δ","dP")) for _ in columnDefs]
         f.write("\n")
         for tableLine in tableData:
             for line in tableLine.values():
@@ -153,6 +144,9 @@ def validatedOnly():
         switch[_].value = False
     for _ in opt_config.validatedFamilies:
         switch[_].value = True
+    # This is a specific requirement to "unvalidate" RZ-163-11 system
+    opt_config.valid_systems.remove('RZ-163_Regular-11')
+    subswitch['RZ-163_Regular-11'].props('color=gray text-color=green')
 
 def add_remove_system(e):
     # Filter-out the systems per family
@@ -307,6 +301,7 @@ def checkUVT(UVT):
 
 def changeFlowUnits():
     # Change the flow units whenever the button is pressed
+
     if pquvt.flowUnits == '[m³/h]':
         pquvt.minQ = round(pquvt.minQ * opt_config.m3h_2_gpm,0)
         pquvt.maxQ = round(pquvt.maxQ * opt_config.m3h_2_gpm,0)
@@ -324,6 +319,7 @@ def changeFlowUnits():
                 {'headerName': 'Qmax [gpm]', 'field': 'qMax'},
                 {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
                 {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
+                {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
         ]
 
         # Convert table flow and PQR to gpm
@@ -349,6 +345,7 @@ def changeFlowUnits():
             {'headerName': 'Qmax [m³/h]', 'field': 'qMax'},
             {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
             {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
+            {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
         ]
 
         # Convert table flow and PQR to m3h
@@ -370,10 +367,11 @@ with ui.dialog() as help_dialog, ui.card():
     ui.markdown('### PQR Optimization Tool for UV-Systems\n'
                 'Please apply to [Atlantium Technologies](https://atlantium.com/) website for more information.')
     ui.html('<p>This tool is intended to provide a global parametric optimization in terms of <strong>PQR</strong>:<br>'
-            '<strong>P</strong>ower-to-<strong>F</strong>low <strong>R</strong>atio, '
+            '<strong>P</strong>ower-to-Flow (<strong>Q</strong>) <strong>R</strong>atio, '
             'which is similar to the <strong>Cost-Per-Treated-Volume</strong> for the Atlantium UV-Reactors Family</p>')
     ui.html('<p><u>Steps to work with the tool:</u></p>'
-            '<p><strong>1:</strong> Choose the parametric range in terms of minimum/maximum for Power[%], Flow Rate[m³/h] and UVT254[%-1cm].<br>'
+            '<p><strong>1:</strong> Choose the parametric range in terms of minimum/maximum for Power in [%], Flow Rate in [m³/h] or [gpm] and UVT254 in [%-1cm].<br>'
+            'Push the [m³/h] <u>or</u> [gpm] button to change the units<br>'
             '<strong>2:</strong> Choose the target UV-Dose, D1-Log inactivation dose and algorithmic accuracy tolerance.<br>'
             '<strong>3:</strong> Select the relevant UV-reactors by family and/or by  specific branch. One may filter out the validated systems only.<br>'
             '<strong>4:</strong> Push the "Optimize by PQR" button to start global search process.<br>'
@@ -383,7 +381,8 @@ with ui.dialog() as help_dialog, ui.card():
             'Some of the reactors will not have a solution for the selected target dose and/or accuracy tolerance<br>'
             '<strong>6:</strong> As soon as the algorithm finishes the optimization, it will populate the ranged table with the most '
             'relevant UV-reactor types at the top of the table. You may find the relevant bar chart of this range at the top-right of the calculator window.<br>'
-            '<strong>7:</strong> One may take a look at the additional charts/graphs for the 5 best performing UV-systems and export the table in CSV format.</p>')
+            '<strong>7:</strong> One may take a look at the additional charts/graphs for the 5 best performing UV-systems and export the table in CSV format.<br>'
+            'Note, that the estimated Pressure Drop is calculated for the optimum flow rate inside the selected range</p>')
 
     ui.button('Close and back to the PQR tool', on_click=help_dialog.close)
 
@@ -483,9 +482,27 @@ with ui.row():
                         {'headerName': 'Qmax [m³/h]', 'field': 'qMax'},
                         {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
                         {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
+                        {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
                     ],
                     'rowData': [],
                 })
+
+            # Set of auxillary attributes for the resaulting table:
+            #table.options.columnDefs[1].__setattr__('editable',True)
+            table.options.columnDefs[1].__setattr__('cellClass', ['text-lg','text-red-500']) # PQR
+            for column in range(len(table.options.columnDefs)):
+                table.options.columnDefs[column].__setattr__('resizable', False)
+                table.options.columnDefs[column].__setattr__('sortable', True)
+            table.options.__setattr__('suppressHorizontalScroll', True)
+            table.options.__setattr__('suppressMovableColumns', True)
+            table.options.columnDefs[3].__setattr__('maxWidth', 80) # Pmin
+            table.options.columnDefs[4].__setattr__('maxWidth', 80) # Pmax
+            table.options.columnDefs[5].__setattr__('maxWidth', 100) # Qmin
+            table.options.columnDefs[6].__setattr__('maxWidth', 100) # Qmax
+            table.options.columnDefs[0].__setattr__('filter','agTextColumnFilter') # System
+            table.options.columnDefs[1].__setattr__('filter', 'agNumberColumnFilter') # PQR
+            table.options.columnDefs[9].__setattr__('filter', 'agNumberColumnFilter') # dP
+
 
         with ui.card().classes('bg-yellow-300 w-full'):
             with ui.row().classes('w-full justify-between'):
@@ -522,7 +539,7 @@ with ui.row():
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:84px')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.05</strong></p>')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.07</strong></p>')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)

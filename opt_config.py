@@ -78,7 +78,7 @@ reactor_families = sorted(list(set(['-'.join(reactor.split('-')[:2]) for reactor
 
 
 valid_systems = list(systems.keys()) #Init the full list
-validatedFamilies = ['RZ-104','RZ-163LP','RZ-163HP','RZ-163UHP','RZ-300']
+validatedFamilies = ['RZ-104','RZ-163_Regular','RZ-163_UHP','RZ-300']
 
 def reactor_subtypes(type):
     # Returns the list of subtypes per list of types

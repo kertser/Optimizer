@@ -40,6 +40,18 @@ def RED(**kwargs):
     params = [kwargs[namespace[argument]] for argument in moduleargs]
     return modulename.RED(*params)
 
+def HeadLoss(**kwargs):
+    # Returns system Pressure Drop in mH2O, as a function of 'Flow' and 'NLamps'
+    try:
+        modulename = __import__(kwargs['module'])
+    except ImportError:
+        print('No module found')
+        sys.exit(1)
+
+    moduleargs = inspect.getfullargspec(modulename.HeadLoss).args
+    params = [kwargs[namespace[argument]] for argument in moduleargs]
+    return modulename.HeadLoss(*params)
+
 def optimize(targetRED = 40, System = 'RZ-163-11',
              minP=40, maxP = 100,
              minFlow = 5, maxFlow = 3500,
