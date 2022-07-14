@@ -26,6 +26,7 @@ class PQUVT:
             self.minQ = 10*opt_config.m3h_2_gpm
             self.maxQ = 2000*opt_config.m3h_2_gpm
             self.flowUnits = '[gpm]'
+        self.pressureUnits = opt_config.dp_units
         self.minUVT = 25
         self.maxUVT = 99
         self.targetRED = 40
@@ -93,6 +94,9 @@ async def optimize():
     else:
         RED_UVT_chartMin.visible = False
         RED_UVT_chartMax.visible = False
+
+def optimize_by_dP():
+    pass
 
 def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
@@ -357,6 +361,16 @@ def changeFlowUnits():
     minFlow.view.__setattr__('max', round(PQUVT().maxQ, 0))
     minFlow.view.__setattr__('min', round(PQUVT().minQ, 0))
 
+def changeDPUnits():
+    # Change the Pressure Drop units whenever the button is pressed
+
+    changeSequence = {'m_H₂O':'PSI','PSI':'in_H₂O','in_H₂O':'m_H₂O'}
+    dP_trget_input.value *= opt_config.P_coeff[pquvt.pressureUnits]
+    pquvt.pressureUnits = changeSequence[opt_config.dp_units]
+    opt_config.dp_units = pquvt.pressureUnits
+
+
+
 #%% --- Main Frame ---
 ui.colors()
 # Help Dialog:
@@ -446,12 +460,18 @@ with ui.row().classes('no-wrap'):
                     maxUVT_number = ui.number(label='maxUVT', format='%.0f', on_change=lambda x: checkUVT(x)).classes(
                         'font-black w-14 h-1').bind_value(pquvt,'maxUVT')
                 with ui.row().classes('w-full justify-evenly no-wrap'):
-                    targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
-                                                format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
-                    redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
-                                                format='%.1f',placeholder='Dose Margin?').bind_value_to(pquvt,'redMargin').classes('space-x-5 w-32')
-                    D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
-                                                format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
+                    with ui.row().classes('w-full justify-evenly no-wrap'):
+                        targetRED_input = ui.number(label = 'Target RED [mJ/cm²]',value=pquvt.targetRED,
+                                                    format='%.1f',placeholder='Target Dose?').bind_value_to(pquvt,'targetRED').classes('space-x-5 w-32')
+                        redMargin_input = ui.number(label = 'RED margin [±mJ/cm²]',value=pquvt.redMargin,
+                                                    format='%.1f',placeholder='Dose Margin?').bind_value_to(pquvt,'redMargin').classes('space-x-5 w-32')
+                        D1Log_input = ui.number(label='1-Log Dose [±mJ/cm²]', value=pquvt.D1Log,
+                                                    format='%.1f', placeholder='D-1Log?').bind_value_to(pquvt,'D1Log').classes('space-x-5 w-32')
+                    with ui.column().classes('-space-y-5 -mt-4'): # Pressure Drop control
+                        dP_Units = ui.button('[' + opt_config.dp_units + ']', on_click=changeDPUnits).props(
+                            'outline size=xs').bind_text_from(pquvt,'pressureUnits')
+                        dP_trget_input = ui.number(label = 'max ΔP',value=0.4,
+                                                        format='%.2f',placeholder='Max ΔP Limit').classes('space-x-5 w-16')
 
             with ui.card().classes('no-wrap'):
                 chart = ui.chart({
@@ -504,8 +524,9 @@ with ui.row().classes('no-wrap'):
             with ui.row().classes('w-full justify-between'):
                 with ui.row().classes('relative left-0'):
                     opbutton = ui.button('Optimize by PQR', on_click=optimize)
-                    reset = ui.button('Reset All', on_click=reset)
+                    opDPbutton = ui.button('Optimize by ΔP', on_click=optimize_by_dP)
                 with ui.row().classes('relative right-0'):
+                    reset = ui.button('Reset All', on_click=reset)
                     export = ui.button('Export to csv', on_click=export_to_CSV)
                     help = ui.button(on_click=help_dialog.open).props('icon=help')
     # Switches

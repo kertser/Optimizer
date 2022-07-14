@@ -56,6 +56,10 @@ namespace = {
 
 m3h_2_gpm = 4.40 #1 m^3/h in gpms
 flowUnits = 'm3h'
+dp_units = 'm_H₂O'
+#P_coeff = {'mH2O_2_PSI':1.42233, 'PSI_2_inH2O': 27.6799, 'inH2O_2_mH2O': 0.025399}
+P_coeff = {'m_H₂O':1.42233, 'PSI': 27.6799, 'in_H₂O': 0.025399}
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
