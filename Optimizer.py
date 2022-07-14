@@ -320,7 +320,7 @@ def changeFlowUnits():
                 {'headerName': 'Qmax [gpm]', 'field': 'qMax'},
                 {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
                 {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
-                {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
+                {'headerName': 'ΔP [mH₂O]', 'field': 'dP'}
         ]
 
         # Convert table flow and PQR to gpm
@@ -346,7 +346,7 @@ def changeFlowUnits():
             {'headerName': 'Qmax [m³/h]', 'field': 'qMax'},
             {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
             {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
-            {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
+            {'headerName': 'ΔP [mH₂O]', 'field': 'dP'}
         ]
 
         # Convert table flow and PQR to m3h
@@ -365,11 +365,26 @@ def changeDPUnits():
     # Change the Pressure Drop units whenever the button is pressed
 
     changeSequence = {'m_H₂O':'PSI','PSI':'in_H₂O','in_H₂O':'m_H₂O'}
-    dP_trget_input.value *= opt_config.P_coeff[pquvt.pressureUnits]
+    from_Unit = pquvt.pressureUnits
+    dP_trget_input.value *= opt_config.P_coeff[from_Unit]
     pquvt.pressureUnits = changeSequence[opt_config.dp_units]
     opt_config.dp_units = pquvt.pressureUnits
-
-
+    Punit = 'ΔP ['+ pquvt.pressureUnits.replace('_','') +']'
+    table.options['columnDefs'] = [
+        {'headerName': 'System Type', 'field': 'system'},
+        {'headerName': 'PQR [W/gpm]', 'field': 'pqr'},
+        {'headerName': 'Effective RED [mJ/cm²]', 'field': 'targetRED'},
+        {'headerName': 'Pmin [%]', 'field': 'pMin'},
+        {'headerName': 'Pmax [%]', 'field': 'pMax'},
+        {'headerName': 'Qmin [gpm]', 'field': 'qMin'},
+        {'headerName': 'Qmax [gpm]', 'field': 'qMax'},
+        {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
+        {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
+        {'headerName': Punit, 'field': 'dP'}
+    ]
+    # Convert table dP data units
+    for row in range(len(table.options.rowData)):
+        table.options.rowData[row]['dP'] = round(table.options.rowData[row]['dP'] * opt_config.P_coeff[from_Unit], 2)
 
 #%% --- Main Frame ---
 ui.colors()
@@ -556,7 +571,7 @@ with ui.row().classes('no-wrap'):
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around').classes('no-wrap')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around').classes('no-wrap')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:78px').classes('no-wrap')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.08</strong></p>').classes('no-wrap')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.09</strong></p>').classes('no-wrap')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
