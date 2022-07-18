@@ -75,10 +75,10 @@ def optimize_by_dP(targetRED = 40, System = 'RZ-163-11',
     if maxUVT>int(opt_config.UVTmin_max(System)[1]):
         maxUVTm = int(opt_config.UVTmin_max(System)[1])
 
-    def objective(x):  # PQR
+    def objective(x):  # dP
         # Minimize HeadLoss
         # HeadLoss(module=opt_config.systems[system], Flow=xOpt[1] / unit_multiplier, NLamps=opt_config.NLamps[system])
-        return HeadLoss(module=systems[System],NLamps=NLamps[System], Flow = x[1])-target_dP
+        return HeadLoss(module=systems[System],NLamps=NLamps[System], Flow = x[1])
 
     def c1(x):
         # RED >= targetRED
@@ -88,11 +88,10 @@ def optimize_by_dP(targetRED = 40, System = 'RZ-163-11',
         # RED <= targetRED+10
         return (targetRED + 10) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)
 
-    """
     def c3(x):
         # dP <= target dP
-        return callPD(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)-target_dP
-    """
+        return target_dP - HeadLoss(module=systems[System],NLamps=NLamps[System], Flow = x[1])
+
 
     def callRED(x, **kwargs):
 
@@ -123,8 +122,8 @@ def optimize_by_dP(targetRED = 40, System = 'RZ-163-11',
 
     # Inequality constants:
     cons = ({'type': 'ineq', 'fun': c1}, # RED >= targetRED
-            {'type': 'ineq', 'fun': c2})
-            #  {'type': 'ineq', 'fun': c3}) # dP <= target dP
+            {'type': 'ineq', 'fun': c2},
+            {'type': 'ineq', 'fun': c3}) # dP <= target dP
 
     # Put bounds on variable x[0],x[1],x[2] which is P,Q,UVT
     bounds = ((minP, maxP), (minFlow, maxFlow), (minUVT, maxUVT))
