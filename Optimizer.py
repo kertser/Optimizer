@@ -1,10 +1,7 @@
 """
 #TODO:
-add head loss output in mH2O, PSI, inH2O
-add max operation pressure to the control variables in bar, PSI
 add a target pathogen and log reduction as control variables (optimize for log-inactivation)
 optimze for UV-Dose
-optimize for pressure
 """
 
 import PQR_optimizer
@@ -38,14 +35,15 @@ pquvt = PQUVT()
 # This is a temporary procedure and will be replaced
 async def optimize():
     table.options.rowData = []
-    opbutton.visible = False # Hide the "Optimize" button
+    opbutton.visible = False # Hide the "Optimize by PQR" button
+    opDPbutton.visible = False  # Hide the "Optimize by dP" button
     ui.colors(primary='#555') # Make all gray
     ui.notify('Optimiation in progress...\nPlease wait for the calculation results to be finished', close_button='OK')
 
     # Set flow unit multiplier for flow units according to the selection
     unit_multiplier = {'m3h': 1, 'gpm': opt_config.m3h_2_gpm}[opt_config.flowUnits]
 
-    #for system in opt_config.systems.keys():
+    table.options.columnDefs[9].__setattr__('cellClass', ['', ''])  # reset to default
     for system in opt_config.valid_systems:
 
         try:
@@ -83,9 +81,11 @@ async def optimize():
         except: # no solution for the selected range
             await asyncio.sleep(0)
     table.options.rowData = sorted(table.options.rowData, key=lambda d: d['pqr'])
+    table.options.columnDefs[1].__setattr__('cellClass', ['text-lg', 'text-red-500'])  # PQR
     ui.colors() # Reset colors
-    ui.notify('Finished the optimization...',close_button='OK',position='center')
+    ui.notify('Finished the optimization by PQR',close_button='OK',position='center')
     opbutton.visible = True # Restore button visibility
+    opDPbutton.visible = True  # Restore button visibility
 
     if len(table.options.rowData)>0:
         loadChartPQR()
@@ -95,8 +95,71 @@ async def optimize():
         RED_UVT_chartMin.visible = False
         RED_UVT_chartMax.visible = False
 
-def optimize_by_dP():
-    pass
+async def optimize_by_dP():
+    table.options.rowData = []
+    opbutton.visible = False # Hide the "Optimize by PQR" button
+    opDPbutton.visible = False  # Hide the "Optimize by dP" button
+    ui.colors(primary='#555') # Make all gray
+    ui.notify('Optimiation in progress...\nPlease wait for the calculation results to be finished', close_button='OK')
+
+    # Set flow unit multiplier for flow units according to the selection
+    unit_multiplier = {'m3h': 1, 'gpm': opt_config.m3h_2_gpm}[opt_config.flowUnits]
+
+    #for system in opt_config.systems.keys():
+    table.options.columnDefs[1].__setattr__('cellClass', ['', ''])  # reset to default
+    for system in opt_config.valid_systems:
+
+        try:
+            # Iterations (by means of complexity)
+            iters = 5
+            max_iters = 8
+            REDOpt = 0 #Initial value
+            #redMargin = 5
+
+            while not ((pquvt.targetRED - pquvt.redMargin) <= REDOpt <= (pquvt.targetRED + pquvt.redMargin)) and (iters < max_iters):
+                # The flow untis are divided by multiplier, since the calculated flow units shall be in m3h and not in gpm
+                xOpt, REDOpt, dPOpt = PQR_optimizer.optimize_by_dP(System=system,minP=pquvt.minP,maxP=pquvt.maxP,
+                                                              minFlow=pquvt.minQ/unit_multiplier,maxFlow=pquvt.maxQ/unit_multiplier,
+                                                              minUVT=pquvt.minUVT,maxUVT=pquvt.maxUVT,
+                                                              iters = iters,targetRED=pquvt.targetRED,
+                                                              redMargin=pquvt.redMargin,D1Log=pquvt.D1Log,target_dP=dP_trget_input.value)
+
+                # Calculate the pressure drop at the selected flow rate xOpt[1]
+                dP = PQR_optimizer.HeadLoss(module=opt_config.systems[system],Flow=xOpt[1]/unit_multiplier,NLamps=opt_config.NLamps[system])
+
+                PQROpt = xOpt[0]/xOpt[1] * opt_config.LampPower(system) * opt_config.NLamps[system]
+                #PQROpt = xOpt[0] / xOpt[1]
+                PQROpt /= unit_multiplier # In this case we want to return the flow in the P/Q in actual units.
+                iters += 1
+                if iters == max_iters:
+                    raise Exception("not converging good enough")
+
+            table.options.rowData.append({
+                'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
+                'pMin': max(int(opt_config.Pmin_max(system)[0]),pquvt.minP), 'pMax': min(int(opt_config.Pmin_max(system)[1]),pquvt.maxP),
+                'qMin': max(int(opt_config.Qmin_max(system)[0])*unit_multiplier,pquvt.minQ), 'qMax': min(int(opt_config.Qmin_max(system)[1])*unit_multiplier,pquvt.maxQ),
+                'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT),
+                'dP': dPOpt
+            })
+            await table.view.update()
+            await asyncio.sleep(1)
+        except: # no solution for the selected range
+            await asyncio.sleep(0)
+    table.options.rowData = sorted(table.options.rowData, key=lambda d: d['dP'])
+    table.options.columnDefs[9].__setattr__('cellClass', ['text-lg', 'text-red-500'])  # dP
+
+    ui.colors() # Reset colors
+    ui.notify('Finished the optimization by Pressure Loss',close_button='OK',position='center')
+    opbutton.visible = True # Restore button visibility
+    opDPbutton.visible = True  # Restore button visibility
+
+    if len(table.options.rowData)>0:
+        loadChartPQR()
+        RED_UVT_chartMin.visible = True
+        RED_UVT_chartMax.visible = True
+    else:
+        RED_UVT_chartMin.visible = False
+        RED_UVT_chartMax.visible = False
 
 def export_to_CSV(): # Export the data to csv
     tableData = table.options.to_dict()['rowData']
@@ -363,25 +426,15 @@ def changeFlowUnits():
 
 def changeDPUnits():
     # Change the Pressure Drop units whenever the button is pressed
-
     changeSequence = {'m_H₂O':'PSI','PSI':'in_H₂O','in_H₂O':'m_H₂O'}
     from_Unit = pquvt.pressureUnits
     dP_trget_input.value *= opt_config.P_coeff[from_Unit]
     pquvt.pressureUnits = changeSequence[opt_config.dp_units]
     opt_config.dp_units = pquvt.pressureUnits
     Punit = 'ΔP ['+ pquvt.pressureUnits.replace('_','') +']'
-    table.options['columnDefs'] = [
-        {'headerName': 'System Type', 'field': 'system'},
-        {'headerName': 'PQR [W/gpm]', 'field': 'pqr'},
-        {'headerName': 'Effective RED [mJ/cm²]', 'field': 'targetRED'},
-        {'headerName': 'Pmin [%]', 'field': 'pMin'},
-        {'headerName': 'Pmax [%]', 'field': 'pMax'},
-        {'headerName': 'Qmin [gpm]', 'field': 'qMin'},
-        {'headerName': 'Qmax [gpm]', 'field': 'qMax'},
-        {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
-        {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
-        {'headerName': Punit, 'field': 'dP'}
-    ]
+
+    table.options.columnDefs[9]['headerName']=Punit
+
     # Convert table dP data units
     for row in range(len(table.options.rowData)):
         table.options.rowData[row]['dP'] = round(table.options.rowData[row]['dP'] * opt_config.P_coeff[from_Unit], 2)
@@ -485,7 +538,7 @@ with ui.row().classes('no-wrap'):
                     with ui.column().classes('-space-y-5 -mt-4'): # Pressure Drop control
                         dP_Units = ui.button('[' + opt_config.dp_units + ']', on_click=changeDPUnits).props(
                             'outline size=xs').bind_text_from(pquvt,'pressureUnits')
-                        dP_trget_input = ui.number(label = 'max ΔP',value=0.4,
+                        dP_trget_input = ui.number(label = 'max ΔP',value=0.5,
                                                         format='%.2f',placeholder='Max ΔP Limit').classes('space-x-5 w-16')
 
             with ui.card().classes('no-wrap'):
@@ -521,7 +574,7 @@ with ui.row().classes('no-wrap'):
 
             # Set of auxillary attributes for the resaulting table:
             #table.options.columnDefs[1].__setattr__('editable',True)
-            table.options.columnDefs[1].__setattr__('cellClass', ['text-lg','text-red-500']) # PQR
+            #table.options.columnDefs[1].__setattr__('cellClass', ['text-lg','text-red-500']) # PQR
             for column in range(len(table.options.columnDefs)):
                 table.options.columnDefs[column].__setattr__('resizable', False)
                 table.options.columnDefs[column].__setattr__('sortable', True)
@@ -571,7 +624,7 @@ with ui.row().classes('no-wrap'):
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around').classes('no-wrap')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around').classes('no-wrap')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:78px').classes('no-wrap')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.09</strong></p>').classes('no-wrap')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.10</strong></p>').classes('no-wrap')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
