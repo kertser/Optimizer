@@ -147,7 +147,7 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
              minP=40, maxP = 100,
              minFlow = 5, maxFlow = 3500,
              minUVT = 25, maxUVT = 98,
-             iters=5, redMargin=5, D1Log=18):
+             iters=5, redMargin=3, D1Log=18):
     # Optimization function will return minimum PQR at the set range of parameters
 
     # Check the boundary conditions:
@@ -171,12 +171,12 @@ def optimize(targetRED = 40, System = 'RZ-163-11',
         return PQR(x)
 
     def c1(x):
-        # RED >= targetRED
-        return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log) - (targetRED)
+        # RED >= targetRED + redMargin
+        return callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log) - (targetRED - redMargin)
 
     def c2(x):
-        # RED <= targetRED+10
-        return (targetRED + 10) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)
+        # RED <= targetRED + redMargin
+        return (targetRED + redMargin) - callRED(x, module=systems[System], NLamps=NLamps[System], D1Log=D1Log)
 
     def PQR(x):
         P = x[0]

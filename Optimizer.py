@@ -27,7 +27,7 @@ class PQUVT:
         self.minUVT = 25
         self.maxUVT = 99
         self.targetRED = 40
-        self.redMargin = 5 # RED +/- margin of RED
+        self.redMargin = 3 # RED +/- margin of RED
         self.D1Log = 18 # mJ/cm^2
 
 pquvt = PQUVT()
@@ -69,6 +69,8 @@ async def optimize():
                 if iters == max_iters:
                     raise Exception("not converging good enough")
 
+            """
+            # Old and working:
             table.options.rowData.append({
                 'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
                 'pMin': max(int(opt_config.Pmin_max(system)[0]),pquvt.minP), 'pMax': min(int(opt_config.Pmin_max(system)[1]),pquvt.maxP),
@@ -76,6 +78,20 @@ async def optimize():
                 'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT), 'uvtMax': min(int(opt_config.UVTmin_max(system)[1]),pquvt.maxUVT),
                 'dP': dP
             })
+            """
+
+            # Taking results from xOpt
+            table.options.rowData.append({
+                'system': system, 'pqr': round(PQROpt, 1), 'targetRED': round(REDOpt, 1),
+                'pMin': round(xOpt[0],1), # aka - optimum Power
+                'pMax': min(int(opt_config.Pmin_max(system)[1]), pquvt.maxP),
+                'qMin': round(xOpt[1],1), # aka optimum Flow Rate
+                'qMax': min(int(opt_config.Qmin_max(system)[1]) * unit_multiplier, pquvt.maxQ),
+                'uvtMin': max(int(opt_config.UVTmin_max(system)[0]),pquvt.minUVT),
+                'uvtMax': round(xOpt[2],1), # aka optimum UVT,
+                'dP': dP
+            })
+
             await table.view.update()
             await asyncio.sleep(1)
         except: # no solution for the selected range
@@ -288,9 +304,9 @@ def loadChartRED(minmax):
     chart.options['yAxis'] = {'title': {'text': 'RED [mJ/cm²]'}}
     chart.options['title'] = {'text': 'RED vs. UVT'}
     if minmax == 'min':
-        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Minimum Flow'}
+        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at minimum common Optimum Flow'}
     elif minmax =='max':
-        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at Maximum Flow'}
+        chart.options['subtitle'] = {'text': 'Top 5 UV-Systems at minimum common Upper Limit Flow'}
     chart.options['series'] = []  # Initialize Empty
 
     # Add all the systems into the list
@@ -299,11 +315,12 @@ def loadChartRED(minmax):
 
     UVTs = np.round(np.linspace(70, 98), 1)
     # Units have to be in m3h, not in gpm
-    minFlow = max([[x for x in tableData[:5] if x['system'] == system][0]['qMin']/unit_multiplier for system in systems])
+    #minFlow = max([[x for x in tableData[:5] if x['system'] == system][0]['qMin']/unit_multiplier for system in systems])
+    minFlow = min([[x for x in tableData[:5] if x['system'] == system][0]['qMin'] / unit_multiplier for system in systems])
     maxFlow = min([[x for x in tableData[:5] if x['system'] == system][0]['qMax']/unit_multiplier for system in systems])
 
     for system in systems:
-        if minmax == 'min':
+        if minmax == 'min': #Optimum
             qFlow = minFlow
         elif minmax =='max':
             qFlow = maxFlow
@@ -372,7 +389,12 @@ def changeFlowUnits():
         pquvt.flowUnits = '[gpm]'
         opt_config.flowUnits = 'gpm'
 
-        # Set the column definitions to "gpm"
+        # Set the column definitions to "gpm":
+        table.options.columnDefs[1]['headerName'] = 'PQR [W/gpm]'
+        table.options.columnDefs[5]['headerName'] = 'Qmin [gpm]'
+        table.options.columnDefs[6]['headerName'] = 'Qmax [gpm]'
+
+        """
         table.options['columnDefs'] = [
                 {'headerName': 'System Type', 'field': 'system'},
                 {'headerName': 'PQR [W/gpm]', 'field': 'pqr'},
@@ -385,7 +407,7 @@ def changeFlowUnits():
                 {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
                 {'headerName': 'ΔP [mH₂O]', 'field': 'dP'}
         ]
-
+        """
         # Convert table flow and PQR to gpm
         for row in range(len(table.options.rowData)):
             table.options.rowData[row]['pqr'] = round(table.options.rowData[row]['pqr'] / opt_config.m3h_2_gpm, 1)
@@ -398,7 +420,12 @@ def changeFlowUnits():
         pquvt.flowUnits = '[m³/h]'
         opt_config.flowUnits = 'm3h'
 
-        # Set the column definitions to "m³/h"
+        # Set the column definitions to "m³/h":
+        table.options.columnDefs[1]['headerName'] = 'PQR [W/(m³/h)]'
+        table.options.columnDefs[5]['headerName'] = 'Qmin [m³/h]'
+        table.options.columnDefs[6]['headerName'] = 'Qmax [m³/h]'
+
+        """
         table.options['columnDefs'] = [
             {'headerName': 'System Type', 'field': 'system'},
             {'headerName': 'PQR [W/(m³/h)]', 'field': 'pqr'},
@@ -411,6 +438,7 @@ def changeFlowUnits():
             {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
             {'headerName': 'ΔP [mH₂O]', 'field': 'dP'}
         ]
+        """
 
         # Convert table flow and PQR to m3h
         for row in range(len(table.options.rowData)):
@@ -550,8 +578,8 @@ with ui.row().classes('no-wrap'):
                 }).classes('h-64')
                 with ui.row():
                     PQR_chart = ui.button('PQR chart', on_click = loadChartPQR).props('size=sm')
-                    RED_UVT_chartMin = ui.button('RED vs UVT chart at Qmin', on_click = lambda: loadChartRED('min')).props('size=sm')
-                    RED_UVT_chartMax = ui.button('RED vs UVT chart at Qmax', on_click = lambda: loadChartRED('max')).props('size=sm')
+                    RED_UVT_chartMin = ui.button('RED vs UVT at Q_opt common minimum', on_click = lambda: loadChartRED('min')).props('size=sm')
+                    RED_UVT_chartMax = ui.button('RED vs UVT at Q_max common upper limit', on_click = lambda: loadChartRED('max')).props('size=sm')
                     RED_UVT_chartMin.visible = False
                     RED_UVT_chartMax.visible = False
 
@@ -561,12 +589,12 @@ with ui.row().classes('no-wrap'):
                         {'headerName': 'System Type', 'field': 'system'},
                         {'headerName': 'PQR [W/(m³/h)]', 'field': 'pqr'},
                         {'headerName': 'Effective RED [mJ/cm²]', 'field': 'targetRED'},
-                        {'headerName': 'Pmin [%]', 'field': 'pMin'},
+                        {'headerName': 'Popt [%]', 'field': 'pMin'}, #Optimum
                         {'headerName': 'Pmax [%]', 'field': 'pMax'},
-                        {'headerName': 'Qmin [m³/h]', 'field': 'qMin'},
+                        {'headerName': 'Qopt [m³/h]', 'field': 'qMin'}, #Optimum
                         {'headerName': 'Qmax [m³/h]', 'field': 'qMax'},
                         {'headerName': 'UVT254min [%-1cm]', 'field': 'uvtMin'},
-                        {'headerName': 'UVT254max [%-1cm]', 'field': 'uvtMax'},
+                        {'headerName': 'UVT254opt [%-1cm]', 'field': 'uvtMax'}, #Optimum
                         {'headerName': 'ΔP [mH2O]', 'field': 'dP'}
                     ],
                     'rowData': [],
@@ -624,7 +652,7 @@ with ui.row().classes('no-wrap'):
                 clearAll = ui.button('Clear', on_click=clearAll).props('size=sm icon=camera align=around').classes('no-wrap')
                 enableAll = ui.button('Select All', on_click=selectAll).props('size=sm icon=my_location align=around').classes('no-wrap')
         ui.image('https://atlantium.com/wp-content/uploads/2022/06/HOD-UV-A_Technology_Overview-540x272.jpg').style('height:78px').classes('no-wrap')
-ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.10</strong></p>').classes('no-wrap')
+ui.html('<p>Atlantium Technologies, Mike Kertser, 2022, <strong>v1.11</strong></p>').classes('no-wrap')
 
 if __name__ == "__main__":
     #ui.run(title='Optimizer', favicon='favicon.ico', host='127.0.0.1', reload=False, show=True)
