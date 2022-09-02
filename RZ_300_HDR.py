@@ -20,7 +20,7 @@ g = 1.1855262222
 VF_A = 1.006642717 #VF calculation
 VF_B = 6.181224702 #VF calculation
 
-LampPower = 2300 #[W]
+LampPower = 4200 #[W]
 minFlow = 30#m3h
 maxFlow = 500#m3h
 
